@@ -46,3 +46,4 @@ Free-account installs expire after 7 days — press Run again to refresh.
 - `DroneEngine.swift` — AVAudioEngine graph (delay → cathedral reverb, plus octave-up shimmer hall), session handling, fade in/out
 - `RadarView.swift` — polar map of the field
 - `ContentView.swift` — app entry, main screen, settings sheet
+- `Assets.xcassets` — app icon (three tapered waves, rendered at 1024 px)
