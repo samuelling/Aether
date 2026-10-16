@@ -3,9 +3,11 @@ import Foundation
 /// Control surface shared between the main thread (writer) and the audio thread (reader).
 /// Plain aligned Float stores; no locks, no allocation on the audio thread.
 final class DroneParams {
-    /// Device slots (each owns three note voices, round-robin, so long tails can overlap)
-    static let voiceCount = 8
-    static let noteVoices = voiceCount * 3
+    /// Device slots: how many emitters can sing at once.
+    static let voiceCount = 32
+    /// Shared pool of note voices. Notes take the least-recently-used voice, so long
+    /// tails overlap freely; at full density a voice is reused only after ~15 s.
+    static let noteVoices = 64
     static let bedVoices = 4
 
     enum G: Int, CaseIterable {
@@ -83,6 +85,11 @@ final class DroneDSP {
     private let releaseCoef: Float
     private let stealCoef: Float
 
+    /// 4096-point sine table (+1 guard); a lookup is several times cheaper than sinf,
+    /// which matters with up to 64 voices × 5 oscillators.
+    private let sine: UnsafeMutablePointer<Float>
+    private static let tableSize = 4096
+
     init(sampleRate: Float, params: DroneParams) {
         sr = sampleRate
         p = params
@@ -101,11 +108,24 @@ final class DroneDSP {
         // Release: τ = 3 s (≈ 20 s tail). Attack is set per block from the Response control.
         releaseCoef = expf(-1 / (3.0 * sampleRate))
         stealCoef = expf(-1 / (0.012 * sampleRate))       // ~12 ms fade when a voice is reused
+        let n = DroneDSP.tableSize
+        sine = UnsafeMutablePointer<Float>.allocate(capacity: n + 1)
+        for i in 0...n { sine[i] = sinf(2 * Float.pi * Float(i) / Float(n)) }
     }
 
     deinit {
         ns.deallocate()
         bs.deallocate()
+        sine.deallocate()
+    }
+
+    /// sin(2π·ph) for ph in [0, 1), by linear interpolation in the table.
+    @inline(__always) private func sn(_ ph: Float) -> Float {
+        let x = ph * Float(DroneDSP.tableSize)
+        let i = min(max(Int(x), 0), DroneDSP.tableSize - 1)
+        let f = x - Float(i)
+        let a = sine[i]
+        return a + (sine[i + 1] - a) * f
     }
 
     @inline(__always) private func polyBlep(_ t: Float, _ dt: Float) -> Float {
@@ -121,7 +141,6 @@ final class DroneDSP {
 
         let blockT = Float(frames) / sr
         let invN = 1 / Float(frames)
-        let twoPi = 2 * Float.pi
         // Response scales every expressive time constant (not the tails or the chord glide).
         let lag = max(0.1, min(1.5, p[.response]))
         let kLive = 1 - expf(-blockT / (1.5 * lag))
@@ -199,11 +218,10 @@ final class DroneDSP {
                     if env < 1e-4 { env = 0; stage = 5; break }   // next block loads the parked note
                 }
 
-                let w = 1 + wowDepth * sinf(twoPi * wph)
+                let w = 1 + wowDepth * sn(wph)
                 wph += wowInc; if wph >= 1 { wph -= 1 }
 
-                let x = sinf(twoPi * ph1) + 0.55 * sinf(twoPi * ph4)
-                      + a2 * sinf(twoPi * ph2) + a3 * sinf(twoPi * ph3)
+                let x = sn(ph1) + 0.55 * sn(ph4) + a2 * sn(ph2) + a3 * sn(ph3)
                 ph1 += inc1 * w; if ph1 >= 1 { ph1 -= 1 }
                 ph4 += inc4 * w; if ph4 >= 1 { ph4 -= 1 }
                 ph2 += 2 * inc1 * w; if ph2 >= 1 { ph2 -= 1 }
@@ -256,7 +274,7 @@ final class DroneDSP {
                 let v2 = s2 + c2 * s1 + c3 * v3
                 s1 = 2 * v1 - s1
                 s2 = 2 * v2 - s2
-                let breathe = 0.55 + 0.45 * sinf(twoPi * lfo)
+                let breathe = 0.55 + 0.45 * sn(lfo)
                 lfo += lfoInc; if lfo >= 1 { lfo -= 1 }
                 amp += bedAInc
                 let y = v2 * amp * breathe * 0.045

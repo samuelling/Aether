@@ -124,7 +124,7 @@ final class FieldModel: NSObject, ObservableObject {
 
     @Published var scale: DroneScale = .pentatonic
     @Published var rootNote: Int = 2            // pitch class, D
-    @Published var voiceLimit: Int = 6
+    @Published var voiceLimit: Int = 10
     @Published var floorDBm: Double = -95       // weakest signal that still sings
     @Published var chordSeconds: Double = 32
     /// 1 = slow drift (default); toward 0.15 = tight, the sound follows your hands.
@@ -139,7 +139,9 @@ final class FieldModel: NSObject, ObservableObject {
     private var store: [UUID: RadioSource] = [:]
     private var owners: [UUID?] = Array(repeating: nil, count: DroneParams.voiceCount)
     private var loopPos: [Double] = Array(repeating: -1, count: DroneParams.voiceCount)
-    private var roundRobin: [Int] = Array(repeating: 0, count: DroneParams.voiceCount)
+    /// Which device each pooled note voice last played for, and when (for LRU reuse).
+    private var poolOwner: [UUID?] = Array(repeating: nil, count: DroneParams.noteVoices)
+    private var poolLastTrig: [Double] = Array(repeating: -1e9, count: DroneParams.noteVoices)
     /// Note-ons are written one tick, then released the next, so the audio thread never
     /// sees a trigger before the note's pitch and level have landed.
     private var pendingTriggers: [Int] = []
@@ -286,20 +288,15 @@ final class FieldModel: NSObject, ObservableObject {
     private func playLoops(now: TimeInterval, melodyBase: Int) {
         let p = engine.params
         var voiced = 0
+        // More singers → each one a little softer, so 30 voices stay a haze, not a wall.
+        let active = owners.compactMap { $0 }.count
+        let densityGain = 1 / sqrt(max(1, Double(active) / 6))
         for slot in 0..<owners.count {
-            let per = DroneParams.noteVoices / DroneParams.voiceCount
-            let subs = (0..<per).map { slot * per + $0 }
             guard let id = owners[slot], var s = store[id] else { continue }
             voiced += 1
             s.voice = slot
             let phrase = Phrase(seed: s.seed, scaleSize: scale.steps.count)
             let pan = Float(Double(s.seed % 1000) / 1000 * 1.6 - 0.8)
-
-            // Live expression on whatever this slot is currently sounding
-            for v in subs {
-                p.nLive[v] = Float((1 - liveDepth) + liveDepth * s.level)
-                p.nWow[v] = Float(s.jitterNorm * 28)       // a disturbed path = warped tape
-            }
 
             let pos = (now / phrase.period + phrase.phase).truncatingRemainder(dividingBy: 1) * phrase.period
             let last = loopPos[slot]
@@ -310,11 +307,14 @@ final class FieldModel: NSObject, ObservableObject {
                     let on = phrase.offsets[k]
                     let crossed = last <= pos ? (on > last && on <= pos) : (on > last || on <= pos)
                     guard crossed else { continue }
-                    let v = subs[roundRobin[slot]]
-                    roundRobin[slot] = (roundRobin[slot] + 1) % subs.count
+                    // Least-recently-used pool voice: the one deepest into its tail.
+                    var v = 0
+                    for i in 1..<poolLastTrig.count where poolLastTrig[i] < poolLastTrig[v] { v = i }
+                    poolLastTrig[v] = now
+                    poolOwner[v] = id
                     let midi = scale.midi(base: melodyBase, degree: phrase.degrees[k])
                     p.nFreq[v] = Float(mtof(midi))
-                    p.nVel[v] = Float(0.35 + 0.65 * s.level)
+                    p.nVel[v] = Float((0.35 + 0.65 * s.level) * densityGain)
                     p.nBright[v] = Float(0.2 + 0.8 * s.level)
                     p.nDur[v] = Float(phrase.durations[k])
                     p.nPan[v] = pan
@@ -325,6 +325,13 @@ final class FieldModel: NSObject, ObservableObject {
             store[id] = s
         }
         voicedCount = voiced
+
+        // Live expression on every sounding note, following the device that played it.
+        for v in 0..<poolOwner.count {
+            guard let id = poolOwner[v], let s = store[id] else { continue }
+            p.nLive[v] = Float((1 - liveDepth) + liveDepth * s.level)
+            p.nWow[v] = Float(s.jitterNorm * 28)           // a disturbed path = warped tape
+        }
     }
 
     /// The pad bed: a stacked chord that glides to the next root every `chordSeconds`.

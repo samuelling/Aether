@@ -11,7 +11,7 @@ Every advertising device in range (phones, watches, earbuds, TVs, the neighbors'
 | Each emitter's identity (hashed) | Its phrase, loop length, stereo position and radar bearing, fixed for as long as it's around |
 | Signal strength | How loud and bright its notes are. Faint devices sing only the first note of their phrase; move closer and the whole phrase unfolds |
 | Jitter (dB wobble around its mean) | Tape wow: the notes' pitch bends gently, like a warped cassette |
-| Strongest N emitters | Get voices (sticky, so they don't flap between near-equals) |
+| Strongest N emitters (up to 32) | Get voices (sticky, so they don't flap between near-equals). Each voice softens as more join, so a crowded room stays a haze |
 | How many emitters are around | Fullness of the pad chord |
 | Whole-field motion vs. its baseline ("air") | The pad opens up and the octave-up shimmer halo swells as you move |
 
@@ -37,13 +37,13 @@ Free-account installs expire after 7 days — press Run again to refresh.
 - iOS only delivers continuous RSSI updates while the app is in the foreground, so the screen stays awake while playing.
 - iOS deliberately hides Wi-Fi signal strength from apps; Bluetooth LE is the closest open window onto the same band.
 - Many devices (especially Apple ones) rotate their Bluetooth address every ~15 minutes for privacy, so an emitter can vanish and reappear with a different phrase. That's the field reshuffling itself.
-- Settings: scale, root note, voice count (1–8), **Reach** (the faintest dBm that still sings), and how often the pad chord changes.
+- Settings: scale, root note, voice count (1–32), **Reach** (the faintest dBm that still sings), and how often the pad chord changes.
 - **Response** (Tight ⟷ Drift) scales every smoothing time constant between the radio and the sound: ≈ 0.6 s end-to-end at Tight, ≈ 2.5 s at Drift (default). Melodic notes still start on their loop schedule; Response changes how fast strength, wow, swells and the pad follow the field.
 
 ## Code map
 
 - `FieldModel.swift` — CoreBluetooth scanning, per-emitter smoothing/jitter, phrase + loop generation, voice allocation, chord progression (30 Hz control loop)
-- `DroneDSP.swift` — realtime synth: 24 note voices (sine + chorused twin + soft overtones, slow envelope, tape wow) and a 4-voice filtered-saw pad bed; lock-free parameter block
+- `DroneDSP.swift` — realtime synth: a shared pool of 64 note voices (table-lookup sine + chorused twin + soft overtones, slow envelope, tape wow; least-recently-used reuse) and a 4-voice filtered-saw pad bed; lock-free parameter block
 - `DroneEngine.swift` — AVAudioEngine graph (delay → cathedral reverb, plus octave-up shimmer hall), session handling, fade in/out
 - `RadarView.swift` — polar map of the field
 - `ContentView.swift` — app entry, main screen, settings sheet

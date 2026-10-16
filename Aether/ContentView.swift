@@ -147,7 +147,12 @@ private struct SettingsView: View {
                     }
                 }
                 Section {
-                    Stepper("Voices: \(model.voiceLimit)", value: $model.voiceLimit, in: 1...DroneParams.voiceCount)
+                    VStack(alignment: .leading) {
+                        Text("Voices: \(model.voiceLimit)")
+                        Slider(value: Binding(get: { Double(model.voiceLimit) },
+                                              set: { model.voiceLimit = Int($0.rounded()) }),
+                               in: 1...Double(DroneParams.voiceCount), step: 1)
+                    }
                     VStack(alignment: .leading) {
                         Text("Reach: \(Int(model.floorDBm)) dBm")
                         Slider(value: $model.floorDBm, in: -105 ... -70, step: 1)
