@@ -72,11 +72,7 @@ struct ContentView: View {
             stat("\(model.sources.filter { $0.level > 0.03 }.count)", "emitters")
             stat("\(model.voicedCount)", "voices")
             stat(model.isPlaying ? model.chordName : "–", "chord")
-            if model.arpOn {
-                stat(String(format: "%.0f", model.bpm), "bpm")
-            } else {
-                stat(String(format: "%.0f%%", model.air * 100), "air")
-            }
+            stat(String(format: "%.0f%%", model.air * 100), "air")
         }
     }
 
@@ -89,28 +85,15 @@ struct ContentView: View {
     }
 
     private var playButton: some View {
-        HStack(spacing: 10) {
-            Button(action: model.togglePlay) {
-                Label(model.isPlaying ? "Fade out" : "Listen",
-                      systemImage: model.isPlaying ? "stop.fill" : "waveform")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(model.isPlaying ? Color.white.opacity(0.15) : Color.cyan.opacity(0.7))
-
-            // Piano arpeggio on/off
-            Button { model.arpOn.toggle() } label: {
-                Image(systemName: "pianokeys")
-                    .font(.headline)
-                    .frame(width: 28)
-                    .padding(.vertical, 14)
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(model.arpOn ? Color.purple.opacity(0.7) : Color.white.opacity(0.12))
-            .accessibilityLabel(model.arpOn ? "Arpeggio on" : "Arpeggio off")
+        Button(action: model.togglePlay) {
+            Label(model.isPlaying ? "Fade out" : "Listen",
+                  systemImage: model.isPlaying ? "stop.fill" : "waveform")
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
         }
+        .buttonStyle(.borderedProminent)
+        .tint(model.isPlaying ? Color.white.opacity(0.15) : Color.cyan.opacity(0.7))
     }
 
     private var sourceList: some View {
@@ -207,7 +190,6 @@ private struct SettingsView: View {
                     Text("Open Bellweathered on a second iPhone nearby and the two find each other automatically, no Wi-Fi network needed. The sky leads harmony (key and scale); this room leads time (tempo and chord changes). Looking for a partner uses a little battery, so the search stops after the time you choose; if the two lose each other, each carries on solo and looks again.")
                 }
                 Section {
-                    Toggle("Piano arpeggio", isOn: $model.arpOn)
                     HStack {
                         Text("Tempo")
                         Spacer()
@@ -216,9 +198,9 @@ private struct SettingsView: View {
                             .monospacedDigit()
                     }
                 } header: {
-                    Text("Arpeggio")
+                    Text("Tempo")
                 } footer: {
-                    Text("A dusty upright wanders over the chord progression in lazy, swung eighths, stepping between chord tones with the odd passing note, leap or rest. The tempo is the field's own pulse: how often the signals cross their average, folded by octaves into a relaxed range. More devices bring more echo and room.")
+                    Text("The field's own pulse: how often the signals cross their average, folded by octaves into a relaxed range. Bellweathered and Leitmotif follow it.")
                 }
                 Section {
                     VStack(alignment: .leading) {

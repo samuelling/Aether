@@ -19,14 +19,11 @@ The signal chain is soft sine-based tones with slow swells and ~20 s releases, a
 
 Moving matters because at 2.4 GHz the wavelength is ~12.5 cm. Reflections off walls interfere, so the field is full of nulls a few centimeters apart, and your body (mostly salt water) casts a radio shadow. Turning around or walking through a doorway changes who's singing.
 
-## Piano arpeggio (optional)
+## Tempo
 
-Tap the piano-keys button (or Settings › Arpeggio) to add a stochastic arpeggio that wanders over the chord progression on a dusty upright.
+Aether keeps time for the duo, and for Leitmotif when it listens in. The tempo is the field's own pulse: how often each device's signal crosses its own average, about 20 s averaged across devices. That rate is folded by octaves (halving or doubling) into a relaxed 44–104 BPM, always choosing the fold closest to the current tempo, and glides there over ~12 s. Settings › Tempo shows it.
 
-- **The piano** is synthesized from scratch at launch, not recorded. It uses slightly sharp, stiff-string overtones, two detuned strings per note, a quick-then-long two-stage decay, a felt hammer thump, a soft lowpass and tape saturation. Playback adds tape wow plus a faint bed of hiss and vinyl crackle.
-- **The notes** are lazy, swung eighths. The arpeggio takes a random walk over the current chord's tones, mostly stepwise, with occasional leaps, repeats, passing tones from the scale, two-note dyads, and rests. It rests more when the field is sparse and anchors on the bar line.
-- **The tempo** is the field's own pulse: how often each device's signal crosses its own average, about 20 s averaged across devices. That rate is folded by octaves (halving or doubling) into a relaxed 44–104 BPM, always choosing the fold closest to the current tempo, and glides there over ~12 s.
-- **The space** grows with the crowd. More devices bring more delay (on a dotted eighth of the tempo) and more room reverb, kept slight.
+(The optional piano arpeggio that used to live here has moved: its dusty upright is now Leitmotif's voice.)
 
 ## The duo: Aether + Bellweathered
 
@@ -39,9 +36,9 @@ Open each app on its own iPhone, near each other, and they find each other autom
 | Leads | **Harmony**: root and scale | **Time**: tempo and the chord timeline |
 | Follows | Aether's tempo (sets its echo); Aether's chord changes steer its drone; a crowded room livens its melody | Bellweathered's key and scale; daylight in its sky opens Aether's pad a little |
 
-A third app, **[Leitmotif](https://github.com/samuelling/Leitmotif)**, can join as a listener: it sings your own phone's data traffic as a solo line over the duo, taking key and scale from Bellweathered and tempo and chords from Aether. Listeners never send and never invite. Both leads invite them into their sessions, so the duo pairs exactly as before, and each lead's Settings › Duo shows who is "Listening in".
+A third app, **[Leitmotif](https://github.com/samuelling/Leitmotif)**, can join as a listener: it plays your own phone's data traffic as a solo line over the duo, on the dusty upright piano that used to be Aether's arpeggio, taking key and scale from Bellweathered and tempo and chords from Aether. Listeners never send and never invite. Both leads invite them into their sessions, so the duo pairs exactly as before, and each lead's Settings › Duo shows who is "Listening in".
 
-Both follow toggles live in each app's Settings › Duo. If the phones lose each other, each carries on solo, and they re-sync when they meet again. Messages are tiny and arrive in tens of milliseconds, well inside what ambient tempos and multi-second glides need. Tight beat-phase lock (Ableton Link) is the natural next step if a beat-locked arpeggio between the two is ever wanted.
+Both follow toggles live in each app's Settings › Duo. If the phones lose each other, each carries on solo, and they re-sync when they meet again. Messages are tiny and arrive in tens of milliseconds, well inside what ambient tempos and multi-second glides need. Tight beat-phase lock (Ableton Link) is the natural next step if beat-locked parts across the phones are ever wanted.
 
 To run Bellweathered, pick the **Bellweather** scheme in Xcode's toolbar (next to the device menu), set its Team the same way, and press ▶. It asks for your approximate location (to hear your weather and sun) and for local-network access (to find Aether).
 
@@ -71,10 +68,9 @@ Free-account installs expire after 7 days — press Run again to refresh.
 
 - `FieldModel.swift` — CoreBluetooth scanning, per-emitter smoothing/jitter, phrase + loop generation, voice allocation, chord progression (30 Hz control loop)
 - `DroneDSP.swift` — realtime synth: a shared pool of 64 note voices (table-lookup sine + chorused twin + soft overtones, slow envelope, tape wow; least-recently-used reuse) and a 4-voice filtered-saw pad bed; lock-free parameter block
-- `DroneEngine.swift` — AVAudioEngine graph (delay → cathedral reverb, an octave-up shimmer hall, and the arpeggio's own delay → hall bus), session handling, fade in/out
+- `DroneEngine.swift` — AVAudioEngine graph (delay → cathedral reverb, plus an octave-up shimmer hall), session handling, fade in/out
 - `RadarView.swift` — polar map of the field
 - `Shared/DuoLink.swift` — the duo protocol both apps compile in (Leitmotif keeps an identical copy in its `Duo/` folder; change both together)
 - `Bellweather/` — Bellweathered: `SkyModel` (weather, sun/moon, mappings, loops, duo), `BellDSP` (drone, wind, rain/snow, bell, melody voices), `BellEngine` (delay → reverb graph), `SkyView` (the animated sky), `Sky` (astronomy, Open-Meteo, simulated sky)
-- `ArpDSP.swift` — synthesized dusty-upright multisample, stochastic arpeggiator, tape wow, hiss and crackle
 - `ContentView.swift` — app entry, main screen, settings sheet, AirPlay button
 - `Assets.xcassets` — app icons: periodic-table element tiles (Ae 119 [2402], Bw 120 [1013]), generated by `AppStore/make_icons.py`

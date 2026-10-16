@@ -1,0 +1,28 @@
+name: Build
+
+# Compile-check Aether and Bellweathered for a generic iPhone, unsigned.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [Aether, Bellweather]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build ${{ matrix.target }}
+        run: |
+          set -o pipefail
+          xcodebuild -project Aether.xcodeproj -target ${{ matrix.target }} -sdk iphoneos \
+            -configuration Debug CODE_SIGNING_ALLOWED=NO build 2>&1 | tee build.log | grep -E "error:|BUILD" || true
+          grep -q "BUILD SUCCEEDED" build.log
+      - name: Surface warnings and errors as annotations
+        if: always()
+        run: |
+          grep -E "^/.*\.swift:[0-9]+:[0-9]+: (warning|error):" build.log | sort -u | head -40 | \
+            sed -E 's#^.*/(Aether|Bellweather|Shared)/([^:]+):([0-9]+):[0-9]+: (warning|error): (.*)$#::\4 file=\1/\2,line=\3::\5#' || true

@@ -36,7 +36,6 @@ SHAPE THE SOUND
 • 13 scales and modes, any key, octave shift
 • Up to 32 voices for crowded rooms
 • Response from slow drift to instant snap, so you can demonstrate the field or simply listen
-• Optional piano arpeggio on a dusty upright, its tempo taken from how restless the signals are
 • A live radar of every emitter around you
 • AirPlay to any speaker
 
@@ -133,7 +132,7 @@ Both apps are iPhone-only, so one set per app: **6.9" iPhone, 1320 × 2868 px po
 
 **Aether shot list**
 1. The radar mid-play with several coloured voices and ripples
-2. The same with the piano arpeggio on and BPM showing
+2. The source list: the strongest emitters and their signal levels
 3. Settings: scale, root, octave, voices, Reach and Response
 4. Settings › Duo showing "Playing with Bellweathered" (once paired)
 

@@ -69,7 +69,7 @@ enum DroneScale: String, CaseIterable, Identifiable {
         case .open:            return [0, 2, 7]
         }
     }
-    /// Chord roots, as scale degrees, that the pad bed (and the arpeggio) drift through.
+    /// Chord roots, as scale degrees, that the pad bed drifts through.
     var progression: [Int] {
         switch self {
         case .pentatonic:      return [0, 4, 1, 3]   // I6 · vi · IIsus · V
@@ -149,7 +149,8 @@ final class FieldModel: NSObject, ObservableObject {
     @Published private(set) var air: Double = 0
     @Published private(set) var voicedCount = 0
     @Published private(set) var chordName = ""
-    /// Arpeggio tempo: the field's average fluctuation rate, folded by octaves into 44–104.
+    /// The room's tempo (sent to the duo, which follows it): the field's average fluctuation
+    /// rate, folded by octaves into 44–104.
     @Published private(set) var bpm: Double = 66
 
     // Duo with Bellweather: the sky leads harmony, the radio room leads time.
@@ -165,7 +166,6 @@ final class FieldModel: NSObject, ObservableObject {
     @Published var scale: DroneScale = .pentatonic
     @Published var rootNote: Int = 2            // pitch class, D
     @Published var octave: Int = 0              // transpose, −2…+2 octaves
-    @Published var arpOn = false                // stochastic piano arpeggio
     @Published var voiceLimit: Int = 10
     @Published var floorDBm: Double = -95       // weakest signal that still sings
     @Published var chordSeconds: Double = 32
@@ -458,34 +458,6 @@ final class FieldModel: NSObject, ObservableObject {
         p[.bedCut] = Float(max(0, 0.15 + 0.25 * density + 0.6 * air + skyTilt))
         p[.response] = Float(response)
         engine.setHalo(0.2 + 0.8 * air)
-
-        // Arpeggio: chord tones over two octaves, plus scale tones for passing notes
-        let ap = engine.arpParams
-        let arpBase = 48 + rootNote + 12 * octave
-        let n = scale.steps.count
-        let chordDegrees = n >= 7 ? [r, r + 2, r + 4, r + 6] : [r, r + 2, r + 4]
-        var chordNotes = Set<Int>()
-        for o in 0..<2 { for d in chordDegrees { chordNotes.insert(scale.midi(base: arpBase, degree: d) + 12 * o) } }
-        let chordSorted = Array(chordNotes.sorted().prefix(ArpParams.maxChord))
-        let scaleSorted = Array(Set((r...(r + 2 * n)).map { scale.midi(base: arpBase, degree: $0) })
-            .sorted().prefix(ArpParams.maxScale))
-        // Keep the piano inside its sampled range (C2–C6, plus a little headroom)
-        func fold(_ m: Int) -> Int {
-            var x = m
-            while x > 96 { x -= 12 }
-            while x < 36 { x += 12 }
-            return x
-        }
-        let chordFolded = Array(Set(chordSorted.map(fold)).sorted())
-        let scaleFolded = Array(Set(scaleSorted.map(fold)).sorted())
-        for (i, m) in chordFolded.enumerated() { ap.chord[i] = Float(mtof(m)) }
-        for (i, m) in scaleFolded.enumerated() { ap.scale[i] = Float(mtof(m)) }
-        ap[.chordCount] = Float(chordFolded.count)
-        ap[.scaleCount] = Float(scaleFolded.count)
-        ap[.enabled] = (arpOn && isPlaying) ? 1 : 0
-        ap[.bpm] = Float(bpm)
-        ap[.density] = Float(density)
-        engine.setArpSpace(density: density, bpm: bpm)
     }
 
     /// Start one note of a device's phrase on the least-recently-used pool voice
