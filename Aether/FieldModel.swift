@@ -22,6 +22,9 @@ struct RadioSource: Identifiable {
     var midi: Int = 60        // first note of its phrase (for color / display)
     var lastNote: TimeInterval = -100
     var lastSign = 0          // side of its mean it was last on (for fluctuation rate)
+    var levelRef: Double = 0  // ~0.6 s baseline of level, for detecting a sudden approach
+    var lastPluck: TimeInterval = -100
+    var pulled: Double = -1   // loop offset of a note pulled forward by an approach
 
     var label: String {
         if let name, !name.isEmpty { return name }
@@ -153,11 +156,12 @@ final class FieldModel: NSObject, ObservableObject {
     @Published var voiceLimit: Int = 10
     @Published var floorDBm: Double = -95       // weakest signal that still sings
     @Published var chordSeconds: Double = 32
-    /// 1 = slow drift (default); toward 0.15 = tight, the sound follows your hands.
+    /// 1 = slow drift (default); toward 0.03 = snap, the sound follows your hands.
     @Published var response: Double = 1.0
 
     /// Rough end-to-end lag from a change in the field to a change in the sound.
-    var approxLagSeconds: Double { 0.25 + 2.2 * response }
+    var approxLagSeconds: Double { 0.12 + 1.9 * response }
+    nonisolated static let snapResponse = 0.03
 
     let ceilingDBm = -35.0
 
@@ -228,8 +232,10 @@ final class FieldModel: NSObject, ObservableObject {
         if var s = store[id] {
             s.raw = rssi
             s.fast += (rssi - s.fast) * alpha(1.7)
-            s.slow += (rssi - s.slow) * alpha(7.8)
-            s.jitter += (abs(rssi - s.slow) - s.jitter) * alpha(6.2)
+            // The mean and jitter are measurements, not expression: fixed time constants,
+            // or a fast Response would make jitter (wow) and the field's tempo collapse.
+            s.slow += (rssi - s.slow) * (1 - exp(-1 / 7.8))
+            s.jitter += (abs(rssi - s.slow) - s.jitter) * (1 - exp(-1 / 6.2))
             // Fluctuation rate: count crossings of the device's own mean (±1.5 dB dead band)
             let dev = rssi - s.slow
             let sign = dev > 1.5 ? 1 : (dev < -1.5 ? -1 : 0)
@@ -266,6 +272,7 @@ final class FieldModel: NSObject, ObservableObject {
             let fade = age < 2.5 ? 1.0 : max(0, 1 - (age - 2.5) / 6)
             let target = min(1, max(0, (s.fast - floorDBm) / span)) * fade
             s.level += (target - s.level) * alpha(7.8)
+            s.levelRef += (s.level - s.levelRef) * (1 - exp(-1 / 18.0))
             flux += abs(s.fast - s.lastFast)
             s.lastFast = s.fast
             let phrase = Phrase(seed: s.seed, scaleSize: scale.steps.count)
@@ -364,24 +371,33 @@ final class FieldModel: NSObject, ObservableObject {
             let last = loopPos[slot]
             loopPos[slot] = pos
             if last >= 0 && isPlaying {
-                let audible = max(1, Int((s.level * Double(phrase.degrees.count)).rounded(.up)))
-                for k in 0..<min(audible, phrase.degrees.count) {
+                let audible = min(phrase.degrees.count,
+                                  max(1, Int((s.level * Double(phrase.degrees.count)).rounded(.up))))
+                for k in 0..<audible {
                     let on = phrase.offsets[k]
                     let crossed = last <= pos ? (on > last && on <= pos) : (on > last || on <= pos)
                     guard crossed else { continue }
-                    // Least-recently-used pool voice: the one deepest into its tail.
-                    var v = 0
-                    for i in 1..<poolLastTrig.count where poolLastTrig[i] < poolLastTrig[v] { v = i }
-                    poolLastTrig[v] = now
-                    poolOwner[v] = id
-                    let midi = scale.midi(base: melodyBase, degree: phrase.degrees[k])
-                    p.nFreq[v] = Float(mtof(midi))
-                    p.nVel[v] = Float((0.35 + 0.65 * s.level) * densityGain)
-                    p.nBright[v] = Float(0.2 + 0.8 * s.level)
-                    p.nDur[v] = Float(phrase.durations[k])
-                    p.nPan[v] = pan
-                    pendingTriggers.append(v)
-                    s.lastNote = now
+                    if on == s.pulled { s.pulled = -1; continue }   // already played early
+                    fire(id, &s, degree: phrase.degrees[k], dur: phrase.durations[k], pan: pan,
+                         gain: densityGain, melodyBase: melodyBase, now: now)
+                }
+
+                // Snap: toward the fast end of Response, a sudden approach (≈ +8 dB within
+                // ~0.6 s) pulls the device's next note forward, so it sings the moment you
+                // move to it instead of waiting for its loop.
+                let rise = s.level - s.levelRef
+                if snapAmount > 0 && rise > 0.14 - 0.04 * snapAmount && now - s.lastPluck > 0.8 {
+                    var k = 0
+                    var soonest = Double.infinity
+                    for j in 0..<audible {
+                        var ahead = phrase.offsets[j] - pos
+                        if ahead <= 0 { ahead += phrase.period }
+                        if ahead < soonest { soonest = ahead; k = j }
+                    }
+                    fire(id, &s, degree: phrase.degrees[k], dur: phrase.durations[k], pan: pan,
+                         gain: densityGain, melodyBase: melodyBase, now: now)
+                    s.pulled = phrase.offsets[k]
+                    s.lastPluck = now
                 }
             }
             store[id] = s
@@ -445,7 +461,31 @@ final class FieldModel: NSObject, ObservableObject {
         engine.setArpSpace(density: density, bpm: bpm)
     }
 
+    /// Start one note of a device's phrase on the least-recently-used pool voice
+    /// (the one deepest into its tail).
+    private func fire(_ id: UUID, _ s: inout RadioSource, degree: Int, dur: Double, pan: Float,
+                      gain: Double, melodyBase: Int, now: TimeInterval) {
+        let p = engine.params
+        var v = 0
+        for i in 1..<poolLastTrig.count where poolLastTrig[i] < poolLastTrig[v] { v = i }
+        poolLastTrig[v] = now
+        poolOwner[v] = id
+        let midi = scale.midi(base: melodyBase, degree: degree)
+        p.nFreq[v] = Float(mtof(midi))
+        p.nVel[v] = Float((0.35 + 0.65 * s.level) * gain)
+        p.nBright[v] = Float(0.2 + 0.8 * s.level)
+        p.nDur[v] = Float(dur)
+        p.nPan[v] = pan
+        pendingTriggers.append(v)
+        s.lastNote = now
+    }
+
     // MARK: Helpers
+
+    /// 0 across most of the range, rising to 1 at the snap end of Response.
+    private var snapAmount: Double {
+        min(1, max(0, (0.3 - response) / (0.3 - FieldModel.snapResponse)))
+    }
 
     /// One-pole smoothing coefficient for a time constant given in updates
     /// (RSSI reports or 30 Hz ticks), scaled by the Response control.
@@ -453,11 +493,12 @@ final class FieldModel: NSObject, ObservableObject {
         1 - exp(-1 / max(0.3, tau * response))
     }
 
-    /// How hard live strength pushes on notes already sounding: gentler at drift,
-    /// near-total at tight so a cupped hand audibly dims the room.
+    /// How hard live strength pushes on notes already sounding: gentle at drift, total at
+    /// snap, so a cupped hand silences what's ringing rather than just dimming it.
     private var liveDepth: Double {
-        let tight = 1 - (response - 0.15) / 0.85
-        return 0.55 + 0.4 * min(1, max(0, tight))
+        let lo = FieldModel.snapResponse
+        let tight = 1 - (response - lo) / (1 - lo)
+        return 0.55 + 0.45 * min(1, max(0, tight))
     }
 
     private static func seed(for id: UUID) -> UInt32 {

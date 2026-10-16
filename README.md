@@ -48,7 +48,7 @@ Free-account installs expire after 7 days — press Run again to refresh.
 - Many devices (especially Apple ones) rotate their Bluetooth address every ~15 minutes for privacy, so an emitter can vanish and reappear with a different phrase. That's the field reshuffling itself.
 - AirPlay works: use the AirPlay button on Aether's screen or Control Center. Keep the app in front so scanning stays live.
 - Settings: 12 scales/modes, root note, **Octave** transpose (−2…+2), voice count (1–32), **Reach** (the faintest dBm that still sings), and how often the pad chord changes.
-- **Response** (Tight ⟷ Drift) scales every smoothing time constant between the radio and the sound: ≈ 0.6 s end-to-end at Tight, ≈ 2.5 s at Drift (default). Melodic notes still start on their loop schedule; Response changes how fast strength, wow, swells and the pad follow the field.
+- **Response** (Snap ⟷ Drift, log-scaled) scales the expressive smoothing between the radio and the sound: ≈ 2 s at Drift (default), ≈ 0.2 s at Snap, where the floor is mostly how often devices advertise. Toward Snap, notes swell in ~70 ms, a cupped hand silences what's ringing, and a sudden approach to a device (≈ +8 dB) pulls its next note forward so it sings at once. The per-device mean and jitter keep fixed time constants at every setting, so wow and tempo stay meaningful.
 
 ## Code map
 

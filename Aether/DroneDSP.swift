@@ -12,7 +12,7 @@ final class DroneParams {
 
     enum G: Int, CaseIterable {
         case master, bedAmp, bedCut
-        case response      // lag scale: 1 = drift (default), ~0.15 = tight
+        case response      // lag scale: 1 = drift (default), 0.03 = snap
     }
 
     // Note voices — written at note-on (freq…pan, trig) or continuously (live, wow)
@@ -142,10 +142,10 @@ final class DroneDSP {
         let blockT = Float(frames) / sr
         let invN = 1 / Float(frames)
         // Response scales every expressive time constant (not the tails or the chord glide).
-        let lag = max(0.1, min(1.5, p[.response]))
+        let lag = max(0.02, min(1.5, p[.response]))
         let kLive = 1 - expf(-blockT / (1.5 * lag))
         let kWow = 1 - expf(-blockT / (1.0 * lag))
-        // Attack: one-pole toward 1.3, reaching 1 in ~2.4 s at drift, ~0.4 s at tight.
+        // Attack: one-pole toward 1.3, reaching 1 in ~2.4 s at drift, ~70 ms at snap.
         let attackCoef = 1 - expf(-1 / (1.6 * lag * sr))
 
         // ---------- Note voices (the melody) ----------

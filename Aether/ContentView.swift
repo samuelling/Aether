@@ -213,14 +213,22 @@ private struct SettingsView: View {
                         HStack {
                             Text("Response")
                             Spacer()
-                            Text(String(format: "≈ %.1f s lag", model.approxLagSeconds))
+                            Text(model.approxLagSeconds < 1
+                                 ? String(format: "≈ %.0f ms lag", model.approxLagSeconds * 1000)
+                                 : String(format: "≈ %.1f s lag", model.approxLagSeconds))
                                 .foregroundStyle(.secondary)
                                 .monospacedDigit()
                         }
-                        Slider(value: $model.response, in: 0.15...1.0) {
+                        // Log-scaled: most of the travel is spent where the lag is short.
+                        Slider(value: Binding(
+                                get: { log(model.response / FieldModel.snapResponse)
+                                       / log(1 / FieldModel.snapResponse) },
+                                set: { model.response = FieldModel.snapResponse
+                                       * pow(1 / FieldModel.snapResponse, $0) }),
+                               in: 0...1) {
                             Text("Response")
                         } minimumValueLabel: {
-                            Text("Tight").font(.caption2)
+                            Text("Snap").font(.caption2)
                         } maximumValueLabel: {
                             Text("Drift").font(.caption2)
                         }
@@ -232,7 +240,7 @@ private struct SettingsView: View {
                 } header: {
                     Text("Field")
                 } footer: {
-                    Text("Each voiced device sings its own short phrase on its own loop length. Reach sets the faintest signal that still sings: lower it to hear the neighbors, raise it to hear only the room. Response sets how quickly the sound follows the field: Tight for demonstrating (cup the phone and hear it dim), Drift for listening.")
+                    Text("Each voiced device sings its own short phrase on its own loop length. Reach sets the faintest signal that still sings: lower it to hear the neighbors, raise it to hear only the room. Response sets how quickly the sound follows the field: Snap for demonstrating (cup the phone and it goes quiet; swing toward a device and it sings at once), Drift for listening.")
                 }
             }
             .navigationTitle("Settings")
