@@ -246,14 +246,14 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Aether-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Aether;
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Aether looks for Bellweathered on a nearby iPhone so the two can play together in the same key and tempo.";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Aether listens to the Bluetooth signals around you and turns their strength and fluctuation into sound.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Aether looks for Bellweathered on a nearby iPhone so the two can play together in the same key and tempo.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -279,14 +279,14 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Aether-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Aether;
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Aether looks for Bellweathered on a nearby iPhone so the two can play together in the same key and tempo.";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Aether listens to the Bluetooth signals around you and turns their strength and fluctuation into sound.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Aether looks for Bellweathered on a nearby iPhone so the two can play together in the same key and tempo.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -311,15 +311,15 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Bellweather-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "Bellweathered";
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Bellweathered looks for Aether on a nearby iPhone so the two can play together in the same key and tempo.";
+				INFOPLIST_KEY_CFBundleDisplayName = Bellweathered;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Bellweathered looks for Aether on a nearby iPhone so the two can play together in the same key and tempo.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Bellweathered uses your approximate location to hear the weather and the sun where you are.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -344,15 +344,15 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Bellweather-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "Bellweathered";
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Bellweathered looks for Aether on a nearby iPhone so the two can play together in the same key and tempo.";
+				INFOPLIST_KEY_CFBundleDisplayName = Bellweathered;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Bellweathered looks for Aether on a nearby iPhone so the two can play together in the same key and tempo.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Bellweathered uses your approximate location to hear the weather and the sun where you are.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
