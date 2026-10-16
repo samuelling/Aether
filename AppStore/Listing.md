@@ -69,7 +69,7 @@ The optional "Duo" feature pairs with our companion app Bellweathered on a secon
 
 | Field | Value | Length |
 |---|---|---|
-| Name | Bellweathered | 12/30 |
+| Name | Bellweathered | 13/30 |
 | Fallback names | Bellweathered: Sky Music · Bellweathered Ambient | |
 | Subtitle | Ambient music from the sky | 26/30 |
 | Keywords | `ambient,weather,generative,drone,bells,sleep,focus,meditation,rain,wind,soundscape,eno,synth` | 92/100 |
