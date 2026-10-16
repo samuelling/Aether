@@ -7,5 +7,9 @@
 		<string>_aether-duo._tcp</string>
 		<string>_aether-duo._udp</string>
 	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
 </dict>
 </plist>
