@@ -41,9 +41,16 @@ struct DuoState: Codable, Equatable {
 final class DuoLink: NSObject, ObservableObject {
     static let serviceType = "aether-duo"      // must match NSBonjourServices in Info.plist
 
+    enum Phase: Equatable { case off, searching, connected, paused }
+
     @Published private(set) var partnerName: String?
     @Published private(set) var partner: DuoState?
-    @Published private(set) var searching = false
+    @Published private(set) var phase: Phase = .off
+    /// When the current search gives up (nil = searching indefinitely, or not searching).
+    @Published private(set) var searchEnds: Date?
+    /// User settings, persisted.
+    @Published private(set) var enabled: Bool
+    @Published private(set) var timeoutMinutes: Int       // 0 = never stop looking
 
     /// Called on the main queue whenever a partner's state arrives.
     var onState: ((DuoState) -> Void)?
@@ -55,61 +62,78 @@ final class DuoLink: NSObject, ObservableObject {
     private let role: String
     private let peer: MCPeerID
     private let session: MCSession
-    private let advertiser: MCNearbyServiceAdvertiser
-    private let browser: MCNearbyServiceBrowser
+    private var advertiser: MCNearbyServiceAdvertiser?
+    private var browser: MCNearbyServiceBrowser?
+    /// Stopped advertisers/browsers are never reused or freed. Restarting one object, or
+    /// freeing it while its cancel is still in flight, is what crashed inside Multipeer
+    /// (_BrowserCancel → CFRunLoopSourceInvalidate). Each search gets fresh objects instead.
+    private var retired: [NSObject] = []
+    private var radiosOn = false
+    private var lastStop = Date.distantPast
     private var lastHeard = Date.distantPast
     /// Partner-app peers the browser has seen and not lost (main queue only), with the time
-    /// we last invited each. Retrying invites from this list replaces stopping and restarting
-    /// the browser, which crashes inside Multipeer (_BrowserCancel → CFRunLoopSourceInvalidate).
+    /// we last invited each.
     private var discovered: [MCPeerID: Date] = [:]
     private var watchdog: Timer?
     private var seq = 0
 
     init(role: String) {
         self.role = role
+        let d = UserDefaults.standard
         // A stable name per install keeps the invite tie-break deterministic.
         let key = "duo.peerSuffix"
-        let suffix = UserDefaults.standard.string(forKey: key) ?? {
+        let suffix = d.string(forKey: key) ?? {
             let s = String(UUID().uuidString.prefix(6))
-            UserDefaults.standard.set(s, forKey: key)
+            d.set(s, forKey: key)
             return s
         }()
+        enabled = d.object(forKey: "duo.enabled") as? Bool ?? true
+        timeoutMinutes = d.object(forKey: "duo.timeoutMinutes") as? Int ?? 5
         peer = MCPeerID(displayName: "\(role)-\(suffix)")
         session = MCSession(peer: peer, securityIdentity: nil, encryptionPreference: .required)
-        advertiser = MCNearbyServiceAdvertiser(peer: peer, discoveryInfo: ["role": role],
-                                               serviceType: DuoLink.serviceType)
-        browser = MCNearbyServiceBrowser(peer: peer, serviceType: DuoLink.serviceType)
         super.init()
         session.delegate = self
-        advertiser.delegate = self
-        browser.delegate = self
     }
 
     deinit {
         watchdog?.invalidate()
-        advertiser.stopAdvertisingPeer()
-        browser.stopBrowsingForPeers()
+        advertiser?.stopAdvertisingPeer()
+        browser?.stopBrowsingForPeers()
         session.disconnect()
     }
 
+    /// Call once at launch. Searches if the user has the duo turned on.
     func start() {
-        advertiser.startAdvertisingPeer()
-        browser.startBrowsingForPeers()
-        searching = true
         watchdog?.invalidate()
         let t = Timer(timeInterval: 2, repeats: true) { [weak self] _ in self?.checkAlive() }
         RunLoop.main.add(t, forMode: .common)
         watchdog = t
+        if enabled { beginSearch() }
     }
 
-    func stop() {
-        advertiser.stopAdvertisingPeer()
-        browser.stopBrowsingForPeers()
-        session.disconnect()
-        watchdog?.invalidate()
-        searching = false
-        dropPartner()
+    func setEnabled(_ on: Bool) {
+        guard on != enabled else { return }
+        enabled = on
+        UserDefaults.standard.set(on, forKey: "duo.enabled")
+        if on {
+            beginSearch()
+        } else {
+            radiosOff()
+            session.disconnect()
+            dropPartner()
+            phase = .off
+            searchEnds = nil
+        }
     }
+
+    func setTimeout(minutes: Int) {
+        timeoutMinutes = max(0, minutes)
+        UserDefaults.standard.set(timeoutMinutes, forKey: "duo.timeoutMinutes")
+        if phase == .searching { searchEnds = deadline() }
+    }
+
+    /// After a timeout, look again for a fresh window.
+    func searchAgain() { beginSearch() }
 
     /// Send our current state to the partner (cheap; call on change and as a heartbeat).
     func send(_ state: DuoState) {
@@ -124,17 +148,75 @@ final class DuoLink: NSObject, ObservableObject {
 
     // MARK: Private
 
+    private func deadline() -> Date? {
+        timeoutMinutes > 0 ? Date().addingTimeInterval(Double(timeoutMinutes) * 60) : nil
+    }
+
+    private func beginSearch() {
+        guard enabled else { return }
+        radiosOnIfNeeded()
+        if partner != nil {
+            phase = .connected
+            searchEnds = nil
+        } else {
+            phase = .searching
+            searchEnds = deadline()
+        }
+    }
+
+    private func radiosOnIfNeeded() {
+        guard !radiosOn else { return }
+        // Never start right on the heels of a stop (e.g. the toggle flicked off and on).
+        let wait = 3 - Date().timeIntervalSince(lastStop)
+        if wait > 0 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + wait) { [weak self] in
+                guard let self, self.enabled, self.phase == .searching || self.phase == .connected else { return }
+                self.radiosOnIfNeeded()
+            }
+            return
+        }
+        let a = MCNearbyServiceAdvertiser(peer: peer, discoveryInfo: ["role": role],
+                                          serviceType: DuoLink.serviceType)
+        let b = MCNearbyServiceBrowser(peer: peer, serviceType: DuoLink.serviceType)
+        a.delegate = self
+        b.delegate = self
+        advertiser = a
+        browser = b
+        radiosOn = true
+        a.startAdvertisingPeer()
+        b.startBrowsingForPeers()
+    }
+
+    private func radiosOff() {
+        guard radiosOn else { return }
+        advertiser?.stopAdvertisingPeer()
+        browser?.stopBrowsingForPeers()
+        if let a = advertiser { retired.append(a) }
+        if let b = browser { retired.append(b) }
+        advertiser = nil
+        browser = nil
+        radiosOn = false
+        lastStop = Date()
+        discovered.removeAll()
+    }
+
     private func checkAlive() {
         if partner != nil && Date().timeIntervalSince(lastHeard) > 10 { dropPartner() }
-        // Nobody connected: re-invite any partner we can still see (the browser keeps running).
-        if searching && session.connectedPeers.isEmpty {
-            for p in Array(discovered.keys) { inviteIfNeeded(p) }
+        guard phase == .searching, session.connectedPeers.isEmpty else { return }
+        if let end = searchEnds, Date() >= end {
+            // Nobody turned up: stop advertising and listening until asked again.
+            radiosOff()
+            phase = .paused
+            searchEnds = nil
+            return
         }
+        // Re-invite any partner we can still see (the browser keeps running).
+        for p in Array(discovered.keys) { inviteIfNeeded(p) }
     }
 
     /// Main queue only. Exactly one side invites (the lower display name), at most every 12 s.
     fileprivate func inviteIfNeeded(_ p: MCPeerID) {
-        guard searching, peer.displayName < p.displayName else { return }
+        guard radiosOn, let browser, peer.displayName < p.displayName else { return }
         guard !session.connectedPeers.contains(where: { $0.displayName == p.displayName }) else { return }
         let last = discovered[p] ?? .distantPast
         guard Date().timeIntervalSince(last) > 12 else { return }
@@ -142,7 +224,8 @@ final class DuoLink: NSObject, ObservableObject {
         browser.invitePeer(p, to: session, withContext: nil, timeout: 10)
     }
 
-    fileprivate func found(_ p: MCPeerID) {
+    fileprivate func found(_ p: MCPeerID, by b: MCNearbyServiceBrowser) {
+        guard b === browser else { return }          // a stopped browser's late report
         if discovered[p] == nil { discovered[p] = .distantPast }
         inviteIfNeeded(p)
     }
@@ -155,22 +238,29 @@ final class DuoLink: NSObject, ObservableObject {
         let had = partner != nil
         partner = nil
         partnerName = nil
-        if had { onLost?() }
+        if had {
+            onLost?()
+            // Lost them: look again for a fresh window.
+            if enabled { beginSearch() }
+        }
     }
 
     fileprivate func received(_ data: Data, from name: String) {
-        guard let s = try? JSONDecoder().decode(DuoState.self, from: data), s.role != role else { return }
+        guard enabled,
+              let s = try? JSONDecoder().decode(DuoState.self, from: data), s.role != role else { return }
         lastHeard = Date()
         partner = s
-        partnerName = s.role == "aether" ? "Aether" : "Bellweather"
+        partnerName = s.role == "aether" ? "Aether" : "Bell Weather"
+        phase = .connected
+        searchEnds = nil
         onState?(s)
     }
 
     fileprivate func peerDisconnected() {
-        if session.connectedPeers.isEmpty {
-            dropPartner()
-        }
+        if session.connectedPeers.isEmpty { dropPartner() }
     }
+
+    fileprivate var acceptsInvites: Bool { enabled && radiosOn }
 }
 
 // MARK: - Multipeer delegates (arrive on background queues)
@@ -200,7 +290,7 @@ extension DuoLink: MCNearbyServiceBrowserDelegate {
                  withDiscoveryInfo info: [String: String]?) {
         // Only pair with the *other* app; the invite itself happens on the main queue.
         guard let theirRole = info?["role"], theirRole != role else { return }
-        DispatchQueue.main.async { [weak self] in self?.found(peerID) }
+        DispatchQueue.main.async { [weak self] in self?.found(peerID, by: browser) }
     }
 
     func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
@@ -215,7 +305,11 @@ extension DuoLink: MCNearbyServiceAdvertiserDelegate {
         // Accept unless we're already paired with someone else. A relaunched partner keeps
         // its name, so a stale entry for the same name doesn't block the new invite.
         let name = peerID.displayName
-        invitationHandler(session.connectedPeers.allSatisfy { $0.displayName == name }, session)
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { invitationHandler(false, nil); return }
+            let ok = self.acceptsInvites && self.session.connectedPeers.allSatisfy { $0.displayName == name }
+            invitationHandler(ok, ok ? self.session : nil)
+        }
     }
 }
 

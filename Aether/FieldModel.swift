@@ -525,7 +525,7 @@ final class FieldModel: NSObject, ObservableObject {
 
     private func receiveDuo(_ s: DuoState) {
         guard s.role == "bellweather" else { return }
-        partnerName = "Bellweather"
+        partnerName = "Bell Weather"
         partnerDay = s.day
         if followPartnerKey {
             if let pc = s.rootPC, pc != rootNote, (0..<12).contains(pc) { rootNote = pc }

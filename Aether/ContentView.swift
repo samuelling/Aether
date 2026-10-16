@@ -192,24 +192,19 @@ private struct SettingsView: View {
                     Text("Tuning")
                 } footer: {
                     if model.partnerName != nil && model.followPartnerKey {
-                        Text("Key and scale are following Bellweather's sky.")
+                        Text("Key and scale are following Bell Weather's sky.")
                     }
                 }
                 Section {
-                    HStack {
-                        Text("Partner")
-                        Spacer()
-                        Text(model.partnerName ?? "Searching nearby…")
-                            .foregroundStyle(model.partnerName == nil ? .secondary : Color.cyan)
-                    }
+                    DuoControls(duo: model.duo, partnerName: "Bell Weather")
                     if let summary = model.partnerSummary {
                         Text(summary).font(.footnote).foregroundStyle(.secondary)
                     }
-                    Toggle("Follow Bellweather's key", isOn: $model.followPartnerKey)
+                    Toggle("Follow Bell Weather's key", isOn: $model.followPartnerKey)
                 } header: {
                     Text("Duo")
                 } footer: {
-                    Text("Open Bellweather on a second iPhone nearby and the two find each other automatically, no Wi-Fi network needed. The sky leads harmony (key and scale); this room leads time (tempo and chord changes). If they lose each other, each carries on solo.")
+                    Text("Open Bell Weather on a second iPhone nearby and the two find each other automatically, no Wi-Fi network needed. The sky leads harmony (key and scale); this room leads time (tempo and chord changes). Looking for a partner uses a little battery, so the search stops after the time you choose; if the two lose each other, each carries on solo and looks again.")
                 }
                 Section {
                     Toggle("Piano arpeggio", isOn: $model.arpOn)

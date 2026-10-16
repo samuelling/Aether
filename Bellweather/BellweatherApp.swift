@@ -142,12 +142,7 @@ private struct BellSettingsView: View {
                     Text("Seven single-note loops on long, unequal periods (Airports-style). Rain makes them busier and louder; snow turns them soft and slow. Tempo sets the echo.")
                 }
                 Section {
-                    HStack {
-                        Text("Partner")
-                        Spacer()
-                        Text(model.partnerName ?? "Searching nearby…")
-                            .foregroundStyle(model.partnerName == nil ? .secondary : Color.cyan)
-                    }
+                    DuoControls(duo: model.duo, partnerName: "Aether")
                     if let summary = model.partnerSummary {
                         Text(summary).font(.footnote).foregroundStyle(.secondary)
                     }
@@ -156,7 +151,7 @@ private struct BellSettingsView: View {
                 } header: {
                     Text("Duo")
                 } footer: {
-                    Text("With Aether on another iPhone nearby, this sky leads the harmony (Aether takes your key and scale) and the radio room leads time: its tempo sets the echo, its chord changes steer the drone, and a crowded room livens the melody.")
+                    Text("With Aether on another iPhone nearby, this sky leads the harmony (Aether takes your key and scale) and the radio room leads time: its tempo sets the echo, its chord changes steer the drone, and a crowded room livens the melody. The search stops after the time you choose, to save battery.")
                 }
             }
             .navigationTitle("Settings")
