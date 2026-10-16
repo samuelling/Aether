@@ -64,7 +64,7 @@ final class BellParams {
     }
 }
 
-/// Bell Weather's sound, rendered natively:
+/// Bellweathered's sound, rendered natively:
 ///  • a six-layer "blend" drone (sine morphing toward a slowly beating saw) at sub-octaves,
 ///    root, octaves and a 2.76× bell partial, each with its own swell and pan drift,
 ///    through a resonant lowpass with a slow filter LFO;

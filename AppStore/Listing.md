@@ -1,4 +1,4 @@
-# App Store listings: Aether and Bell Weather
+# App Store listings: Aether and Bellweathered
 
 Copy each field into App Store Connect › your app (App Store tab, App Information, App Privacy). Character counts are checked against Apple's limits.
 
@@ -40,8 +40,8 @@ SHAPE THE SOUND
 • A live radar of every emitter around you
 • AirPlay to any speaker
 
-DUO WITH BELL WEATHER
-Open Bell Weather on a second iPhone nearby and the two find each other. The sky sets the key, the room sets the tempo, and they play together.
+DUO WITH BELLWEATHERED
+Open Bellweathered on a second iPhone nearby and the two find each other. The sky sets the key, the room sets the tempo, and they play together.
 
 PRIVATE BY DESIGN
 Everything happens on your iPhone. No accounts, ads, analytics or tracking, and nothing about the devices around you is stored or sent anywhere.
@@ -62,15 +62,15 @@ Aether is a musical instrument. Tap "Listen" on the main screen to start the sou
 
 Bluetooth data is processed on device only and never stored or transmitted.
 
-The optional "Duo" feature pairs with our companion app Bell Weather on a second nearby iPhone via MultipeerConnectivity (Local Network permission). It is not needed to review the app; Aether is fully functional on its own. Duo can be turned off in Settings > Duo.
+The optional "Duo" feature pairs with our companion app Bellweathered on a second nearby iPhone via MultipeerConnectivity (Local Network permission). It is not needed to review the app; Aether is fully functional on its own. Duo can be turned off in Settings > Duo.
 ```
 
-## Bell Weather
+## Bellweathered
 
 | Field | Value | Length |
 |---|---|---|
-| Name | Bell Weather | 12/30 |
-| Fallback names | Bell Weather: Sky Music · Bell Weather Ambient | |
+| Name | Bellweathered | 12/30 |
+| Fallback names | Bellweathered: Sky Music · Bellweathered Ambient | |
 | Subtitle | Ambient music from the sky | 26/30 |
 | Keywords | `ambient,weather,generative,drone,bells,sleep,focus,meditation,rain,wind,soundscape,eno,synth` | 92/100 |
 | Category | Music (secondary: Entertainment) | |
@@ -80,12 +80,12 @@ The optional "Duo" feature pairs with our companion app Bell Weather on a second
 
 **Promotional text** (138/170)
 
-Hear the weather. Bell Weather turns the sky where you are, its clouds, wind, rain, sun and moon, into a slowly changing drone with bells.
+Hear the weather. Bellweathered turns the sky where you are, its clouds, wind, rain, sun and moon, into a slowly changing drone with bells.
 
 **Description** (1475/4000)
 
 ```
-Bell Weather plays the sky where you are.
+Bellweathered plays the sky where you are.
 
 It reads the live weather for your location and works out where the sun and moon are, then turns it all into a slowly changing ambient piece: a deep drone that brightens at dawn and darkens at night, wind that gusts when the wind does, the hiss of rain or the hush of snow, and seven bell-like melodies drifting on long, unequal loops.
 
@@ -122,7 +122,7 @@ Weather data by Open-Meteo.com. Headphones recommended.
 **App Review notes** (App Review Information › Notes; no sign-in required):
 
 ```
-Bell Weather is an ambient music app. Tap "Begin" to start the sound; it makes no sound until then. It uses approximate location (when in use) to fetch the current weather from Open-Meteo and to place the sun and moon. If location is denied it uses a default place, and if the network is unavailable it runs a simulated sky; either way it is fully playable. Settings lets you switch to "Simulated" weather to hear different conditions quickly.
+Bellweathered is an ambient music app. Tap "Begin" to start the sound; it makes no sound until then. It uses approximate location (when in use) to fetch the current weather from Open-Meteo and to place the sun and moon. If location is denied it uses a default place, and if the network is unavailable it runs a simulated sky; either way it is fully playable. Settings lets you switch to "Simulated" weather to hear different conditions quickly.
 
 The optional "Duo" feature pairs with our companion app Aether on a second nearby iPhone via MultipeerConnectivity (Local Network permission). It is not needed to review the app. Duo can be turned off in Settings > Duo.
 ```
@@ -135,9 +135,9 @@ Both apps are iPhone-only, so one set per app: **6.9" iPhone, 1320 × 2868 px po
 1. The radar mid-play with several coloured voices and ripples
 2. The same with the piano arpeggio on and BPM showing
 3. Settings: scale, root, octave, voices, Reach and Response
-4. Settings › Duo showing "Playing with Bell Weather" (once paired)
+4. Settings › Duo showing "Playing with Bellweathered" (once paired)
 
-**Bell Weather shot list**
+**Bellweathered shot list**
 1. Daytime sky with clouds, playing
 2. Night sky with stars and the moon
 3. Rain or snow falling with note ripples (Simulated sky makes this easy)

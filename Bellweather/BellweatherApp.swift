@@ -38,9 +38,11 @@ struct BellContentView: View {
     private var header: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("BELL WEATHER")
-                    .font(.system(size: 20, weight: .light, design: .serif))
-                    .tracking(5)
+                Text("BELLWEATHERED")
+                    .font(.system(size: 19, weight: .light, design: .serif))
+                    .tracking(3.5)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
                 Text(model.status).font(.caption).foregroundStyle(.white.opacity(0.75))
                 if let partner = model.partnerName {
                     Label("Duo with \(partner)", systemImage: "link")

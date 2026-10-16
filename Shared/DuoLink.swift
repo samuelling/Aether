@@ -250,7 +250,7 @@ final class DuoLink: NSObject, ObservableObject {
               let s = try? JSONDecoder().decode(DuoState.self, from: data), s.role != role else { return }
         lastHeard = Date()
         partner = s
-        partnerName = s.role == "aether" ? "Aether" : "Bell Weather"
+        partnerName = s.role == "aether" ? "Aether" : "Bellweathered"
         phase = .connected
         searchEnds = nil
         onState?(s)

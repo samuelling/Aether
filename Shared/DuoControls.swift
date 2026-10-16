@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Rows for a Form section: turn the partner search on or off, choose how long to keep
-/// looking, and see where things stand. Shared by Aether and Bell Weather.
+/// looking, and see where things stand. Shared by Aether and Bellweathered.
 struct DuoControls: View {
     @ObservedObject var duo: DuoLink
     let partnerName: String

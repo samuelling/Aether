@@ -102,5 +102,5 @@ def tile(bg, symbol, number, mass, name, glow_rgb, out):
 # 119 and 120 are the next undiscovered elements; the masses are each app's medium:
 # 2402 MHz (Bluetooth advertising channel 37) and 1013 hPa (one standard atmosphere).
 tile(aether_bg(), "Ae", "119", "[2402]", "Aether", (120, 210, 255), sys.argv[1])
-tile(bell_bg(), "Bw", "120", "[1013]", "Bell Weather", (255, 190, 120), sys.argv[2])
+tile(bell_bg(), "Bw", "120", "[1013]", "Bellweathered", (255, 190, 120), sys.argv[2])
 print("ok")

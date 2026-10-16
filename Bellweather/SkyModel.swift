@@ -20,7 +20,7 @@ struct Ripple {
 
 @inline(__always) private func mtof(_ m: Double) -> Double { 440 * pow(2, (m - 69) / 12) }
 
-/// Bell Weather's brain: reads the sky (live or simulated), works out the sun and moon,
+/// Bellweathered's brain: reads the sky (live or simulated), works out the sun and moon,
 /// maps everything onto the drone, wind, rain and melody, and talks to Aether.
 @MainActor
 final class SkyModel: NSObject, ObservableObject {
