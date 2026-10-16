@@ -48,6 +48,7 @@ enum DroneScale: String, CaseIterable, Identifiable {
     case wholeTone = "Whole tone"
     case hirajoshi = "Hirajoshi"
     case insen = "In-sen"
+    case suspended = "Suspended"
     case open = "Open (sus2)"
 
     var id: String { rawValue }
@@ -64,6 +65,7 @@ enum DroneScale: String, CaseIterable, Identifiable {
         case .wholeTone:       return [0, 2, 4, 6, 8, 10]
         case .hirajoshi:       return [0, 2, 3, 7, 8]
         case .insen:           return [0, 1, 5, 7, 10]
+        case .suspended:       return [0, 2, 5, 7, 10]
         case .open:            return [0, 2, 7]
         }
     }
@@ -81,6 +83,7 @@ enum DroneScale: String, CaseIterable, Identifiable {
         case .wholeTone:       return [0, 1, 0, 2]
         case .hirajoshi:       return [0, 3, 1, 4]
         case .insen:           return [0, 2, 3, 1]
+        case .suspended:       return [0, 3, 1, 2]   // quartal colours
         case .open:            return [0, 1, 2, 1]
         }
     }
@@ -149,6 +152,16 @@ final class FieldModel: NSObject, ObservableObject {
     /// Arpeggio tempo: the field's average fluctuation rate, folded by octaves into 44–104.
     @Published private(set) var bpm: Double = 66
 
+    // Duo with Bellweather: the sky leads harmony, the radio room leads time.
+    let duo = DuoLink(role: "aether")
+    @Published private(set) var partnerName: String?
+    @Published private(set) var partnerSummary: String?
+    @Published var followPartnerKey = true
+    private var partnerDay: Double?
+    private var lastChordSerial = -1
+    private var lastDuoSend: TimeInterval = 0
+    private var chordDegreeNow = 0
+
     @Published var scale: DroneScale = .pentatonic
     @Published var rootNote: Int = 2            // pitch class, D
     @Published var octave: Int = 0              // transpose, −2…+2 octaves
@@ -192,6 +205,10 @@ final class FieldModel: NSObject, ObservableObject {
         }
         RunLoop.main.add(t, forMode: .common)
         timer = t
+
+        duo.onState = { [weak self] s in MainActor.assumeIsolated { self?.receiveDuo(s) } }
+        duo.onLost = { [weak self] in MainActor.assumeIsolated { self?.partnerLost() } }
+        duo.start()
     }
 
     // MARK: Transport
@@ -416,7 +433,15 @@ final class FieldModel: NSObject, ObservableObject {
     private func driveBed(now: TimeInterval, heard: Int) {
         let p = engine.params
         let prog = scale.progression
-        let r = prog[Int(now / chordSeconds) % prog.count]
+        let serial = Int(now / chordSeconds)
+        let r = prog[serial % prog.count]
+        chordDegreeNow = r
+        if serial != lastChordSerial {
+            lastChordSerial = serial
+            publishDuo(now: now, heard: heard)          // tell the partner the moment it changes
+        } else if now - lastDuoSend > 2 {
+            publishDuo(now: now, heard: heard)          // heartbeat
+        }
         let base = 48 + rootNote + 12 * max(octave, -1)   // C3…B3; never below C2 for the bass
         let notes = [scale.midi(base: base, degree: r) - 12,
                      scale.midi(base: base, degree: r + 2),
@@ -428,7 +453,9 @@ final class FieldModel: NSObject, ObservableObject {
 
         let density = min(1, Double(heard) / 20)
         p[.bedAmp] = Float(0.3 + 0.5 * density)
-        p[.bedCut] = Float(0.15 + 0.25 * density + 0.6 * air)
+        // With a partner, daylight in Bellweather's sky opens the pad a little.
+        let skyTilt = partnerDay.map { 0.15 * ($0 - 0.5) } ?? 0
+        p[.bedCut] = Float(max(0, 0.15 + 0.25 * density + 0.6 * air + skyTilt))
         p[.response] = Float(response)
         engine.setHalo(0.2 + 0.8 * air)
 
@@ -478,6 +505,45 @@ final class FieldModel: NSObject, ObservableObject {
         p.nPan[v] = pan
         pendingTriggers.append(v)
         s.lastNote = now
+    }
+
+    // MARK: Duo
+
+    private func publishDuo(now: TimeInterval, heard: Int) {
+        lastDuoSend = now
+        var s = DuoState(role: "aether")
+        s.bpm = bpm
+        s.rootPC = rootNote                 // so the partner can tell whether our chords are in its key
+        s.scaleSteps = scale.steps
+        s.chordDegree = chordDegreeNow
+        s.chordSerial = lastChordSerial
+        s.chordSeconds = chordSeconds
+        s.devices = heard
+        s.air = air
+        duo.send(s)
+    }
+
+    private func receiveDuo(_ s: DuoState) {
+        guard s.role == "bellweather" else { return }
+        partnerName = "Bellweather"
+        partnerDay = s.day
+        if followPartnerKey {
+            if let pc = s.rootPC, pc != rootNote, (0..<12).contains(pc) { rootNote = pc }
+            if let steps = s.scaleSteps, let match = DroneScale.allCases.first(where: { $0.steps == steps }),
+               match != scale { scale = match }
+        }
+        var bits: [String] = []
+        if let t = s.tempF { bits.append("\(Int(t.rounded()))°F") }
+        if let c = s.cloud { bits.append("\(Int(c.rounded()))% cloud") }
+        if let pr = s.precip, pr > 0.05 { bits.append("\(Int((pr * 100).rounded()))% rain") }
+        if let place = s.place, !place.isEmpty { bits.append(place) }
+        partnerSummary = bits.isEmpty ? nil : bits.joined(separator: " · ")
+    }
+
+    private func partnerLost() {
+        partnerName = nil
+        partnerSummary = nil
+        partnerDay = nil
     }
 
     // MARK: Helpers

@@ -8,6 +8,7 @@
 
 /* Begin PBXFileReference section */
 		AE0000000000000000000001 /* Aether.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Aether.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AE0000000000000000000020 /* Bellweather.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Bellweather.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -16,10 +17,27 @@
 			path = Aether;
 			sourceTree = "<group>";
 		};
+		AE0000000000000000000021 /* Bellweather */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Bellweather;
+			sourceTree = "<group>";
+		};
+		AE0000000000000000000022 /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Shared;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		AE0000000000000000000003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AE0000000000000000000024 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,6 +51,8 @@
 			isa = PBXGroup;
 			children = (
 				AE0000000000000000000002 /* Aether */,
+				AE0000000000000000000021 /* Bellweather */,
+				AE0000000000000000000022 /* Shared */,
 				AE0000000000000000000005 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +61,7 @@
 			isa = PBXGroup;
 			children = (
 				AE0000000000000000000001 /* Aether.app */,
+				AE0000000000000000000020 /* Bellweather.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -62,12 +83,36 @@
 			);
 			fileSystemSynchronizedGroups = (
 				AE0000000000000000000002 /* Aether */,
+				AE0000000000000000000022 /* Shared */,
 			);
 			name = Aether;
 			packageProductDependencies = (
 			);
 			productName = Aether;
 			productReference = AE0000000000000000000001 /* Aether.app */;
+			productType = "com.apple.product-type.application";
+		};
+		AE0000000000000000000026 /* Bellweather */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AE0000000000000000000027 /* Build configuration list for PBXNativeTarget "Bellweather" */;
+			buildPhases = (
+				AE0000000000000000000023 /* Sources */,
+				AE0000000000000000000024 /* Frameworks */,
+				AE0000000000000000000025 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				AE0000000000000000000021 /* Bellweather */,
+				AE0000000000000000000022 /* Shared */,
+			);
+			name = Bellweather;
+			packageProductDependencies = (
+			);
+			productName = Bellweather;
+			productReference = AE0000000000000000000020 /* Bellweather.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -81,6 +126,9 @@
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					AE0000000000000000000006 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					AE0000000000000000000026 = {
 						CreatedOnToolsVersion = 16.0;
 					};
 				};
@@ -100,6 +148,7 @@
 			projectRoot = "";
 			targets = (
 				AE0000000000000000000006 /* Aether */,
+				AE0000000000000000000026 /* Bellweather */,
 			);
 		};
 /* End PBXProject section */
@@ -112,10 +161,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AE0000000000000000000025 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		AE0000000000000000000007 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AE0000000000000000000023 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -180,7 +243,9 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Aether-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Aether;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Aether looks for Bell Weather on a nearby iPhone so the two can play together in the same key and tempo.";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Aether listens to the Bluetooth signals around you and turns their strength and fluctuation into sound.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -210,7 +275,9 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Aether-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Aether;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Aether looks for Bell Weather on a nearby iPhone so the two can play together in the same key and tempo.";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Aether listens to the Bluetooth signals around you and turns their strength and fluctuation into sound.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -224,6 +291,70 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.samuelling.aether;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		AE0000000000000000000028 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Bellweather-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Bell Weather";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Bell Weather looks for Aether on a nearby iPhone so the two can play together in the same key and tempo.";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Bell Weather uses your approximate location to hear the weather and the sun where you are.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.samuelling.bellweather;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AE0000000000000000000029 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Bellweather-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Bell Weather";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Bell Weather looks for Aether on a nearby iPhone so the two can play together in the same key and tempo.";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Bell Weather uses your approximate location to hear the weather and the sun where you are.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.samuelling.bellweather;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_STRICT_CONCURRENCY = minimal;
@@ -249,6 +380,15 @@
 			buildConfigurations = (
 				AE0000000000000000000012 /* Debug */,
 				AE0000000000000000000013 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AE0000000000000000000027 /* Build configuration list for PBXNativeTarget "Bellweather" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AE0000000000000000000028 /* Debug */,
+				AE0000000000000000000029 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

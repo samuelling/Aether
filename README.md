@@ -28,6 +28,21 @@ Tap the piano-keys button (or Settings › Arpeggio) to add a stochastic arpeggi
 - **The tempo** is the field's own pulse: how often each device's signal crosses its own average, about 20 s averaged across devices. That rate is folded by octaves (halving or doubling) into a relaxed 44–104 BPM, always choosing the fold closest to the current tempo, and glides there over ~12 s.
 - **The space** grows with the crowd. More devices bring more delay (on a dotted eighth of the tempo) and more room reverb, kept slight.
 
+## The duo: Aether + Bell Weather
+
+This project also contains **Bell Weather** (`Bellweather/`), an iPhone port of the web version (`samuelling/Bell-weathered`): the live sky (Open-Meteo weather where you are, or a simulated sky of drifting weather regimes) plus the sun and moon, played as a six-layer drone with slow pitch drift, wind and gusts, rain or snow hiss, an hourly bell on the solar hour, and seven Airports-style melody loops (glass bell, string or kalimba).
+
+Open each app on its own iPhone, near each other, and they find each other automatically (MultipeerConnectivity over Bluetooth or peer-to-peer Wi-Fi, so no router is needed). The work is divided by timescale:
+
+| | Bell Weather (sky, hours) | Aether (radio room, seconds) |
+|---|---|---|
+| Leads | **Harmony**: root and scale | **Time**: tempo and the chord timeline |
+| Follows | Aether's tempo (sets its echo); Aether's chord changes steer its drone; a crowded room livens its melody | Bell Weather's key and scale; daylight in its sky opens Aether's pad a little |
+
+Both follow toggles live in each app's Settings › Duo. If the phones lose each other, each carries on solo, and they re-sync when they meet again. Messages are tiny and arrive in tens of milliseconds, well inside what ambient tempos and multi-second glides need. Tight beat-phase lock (Ableton Link) is the natural next step if a beat-locked arpeggio between the two is ever wanted.
+
+To run Bell Weather, pick the **Bellweather** scheme in Xcode's toolbar (next to the device menu), set its Team the same way, and press ▶. It asks for your approximate location (to hear your weather and sun) and for local-network access (to find Aether).
+
 ## Install on your iPhone
 
 Needs a Mac with Xcode 16 or newer (Xcode 26 for an iPhone on iOS 26). A free Apple ID is enough.
@@ -56,6 +71,8 @@ Free-account installs expire after 7 days — press Run again to refresh.
 - `DroneDSP.swift` — realtime synth: a shared pool of 64 note voices (table-lookup sine + chorused twin + soft overtones, slow envelope, tape wow; least-recently-used reuse) and a 4-voice filtered-saw pad bed; lock-free parameter block
 - `DroneEngine.swift` — AVAudioEngine graph (delay → cathedral reverb, an octave-up shimmer hall, and the arpeggio's own delay → hall bus), session handling, fade in/out
 - `RadarView.swift` — polar map of the field
+- `Shared/DuoLink.swift` — the duo protocol both apps compile in
+- `Bellweather/` — Bell Weather: `SkyModel` (weather, sun/moon, mappings, loops, duo), `BellDSP` (drone, wind, rain/snow, bell, melody voices), `BellEngine` (delay → reverb graph), `SkyView` (the animated sky), `Sky` (astronomy, Open-Meteo, simulated sky)
 - `ArpDSP.swift` — synthesized dusty-upright multisample, stochastic arpeggiator, tape wow, hiss and crackle
 - `ContentView.swift` — app entry, main screen, settings sheet, AirPlay button
 - `Assets.xcassets` — app icon (three tapered waves, rendered at 1024 px)

@@ -50,6 +50,11 @@ struct ContentView: View {
                 Text(model.status)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                if let partner = model.partnerName {
+                    Label("Duo with \(partner)", systemImage: "link")
+                        .font(.caption2)
+                        .foregroundStyle(.cyan)
+                }
             }
             Spacer()
             AirPlayButton()
@@ -170,7 +175,7 @@ private struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Tuning") {
+                Section {
                     Picker("Scale", selection: $model.scale) {
                         ForEach(DroneScale.allCases) { Text($0.rawValue).tag($0) }
                     }
@@ -183,6 +188,28 @@ private struct SettingsView: View {
                                               set: { model.octave = Int($0.rounded()) }),
                                in: -2...2, step: 1)
                     }
+                } header: {
+                    Text("Tuning")
+                } footer: {
+                    if model.partnerName != nil && model.followPartnerKey {
+                        Text("Key and scale are following Bellweather's sky.")
+                    }
+                }
+                Section {
+                    HStack {
+                        Text("Partner")
+                        Spacer()
+                        Text(model.partnerName ?? "Searching nearby…")
+                            .foregroundStyle(model.partnerName == nil ? .secondary : Color.cyan)
+                    }
+                    if let summary = model.partnerSummary {
+                        Text(summary).font(.footnote).foregroundStyle(.secondary)
+                    }
+                    Toggle("Follow Bellweather's key", isOn: $model.followPartnerKey)
+                } header: {
+                    Text("Duo")
+                } footer: {
+                    Text("Open Bellweather on a second iPhone nearby and the two find each other automatically, no Wi-Fi network needed. The sky leads harmony (key and scale); this room leads time (tempo and chord changes). If they lose each other, each carries on solo.")
                 }
                 Section {
                     Toggle("Piano arpeggio", isOn: $model.arpOn)
