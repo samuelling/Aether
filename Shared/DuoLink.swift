@@ -58,7 +58,10 @@ final class DuoLink: NSObject, ObservableObject {
     private let advertiser: MCNearbyServiceAdvertiser
     private let browser: MCNearbyServiceBrowser
     private var lastHeard = Date.distantPast
-    private var lastRebrowse = Date.distantPast
+    /// Partner-app peers the browser has seen and not lost (main queue only), with the time
+    /// we last invited each. Retrying invites from this list replaces stopping and restarting
+    /// the browser, which crashes inside Multipeer (_BrowserCancel → CFRunLoopSourceInvalidate).
+    private var discovered: [MCPeerID: Date] = [:]
     private var watchdog: Timer?
     private var seq = 0
 
@@ -123,19 +126,29 @@ final class DuoLink: NSObject, ObservableObject {
 
     private func checkAlive() {
         if partner != nil && Date().timeIntervalSince(lastHeard) > 10 { dropPartner() }
-        // Nobody connected: restart browsing now and then so discovery (and the invite) fires again.
-        if searching && session.connectedPeers.isEmpty && Date().timeIntervalSince(lastRebrowse) > 10 {
-            rebrowse()
+        // Nobody connected: re-invite any partner we can still see (the browser keeps running).
+        if searching && session.connectedPeers.isEmpty {
+            for p in Array(discovered.keys) { inviteIfNeeded(p) }
         }
     }
 
-    private func rebrowse() {
-        lastRebrowse = Date()
-        browser.stopBrowsingForPeers()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
-            guard let self, self.searching else { return }
-            self.browser.startBrowsingForPeers()
-        }
+    /// Main queue only. Exactly one side invites (the lower display name), at most every 12 s.
+    fileprivate func inviteIfNeeded(_ p: MCPeerID) {
+        guard searching, peer.displayName < p.displayName else { return }
+        guard !session.connectedPeers.contains(where: { $0.displayName == p.displayName }) else { return }
+        let last = discovered[p] ?? .distantPast
+        guard Date().timeIntervalSince(last) > 12 else { return }
+        discovered[p] = Date()
+        browser.invitePeer(p, to: session, withContext: nil, timeout: 10)
+    }
+
+    fileprivate func found(_ p: MCPeerID) {
+        if discovered[p] == nil { discovered[p] = .distantPast }
+        inviteIfNeeded(p)
+    }
+
+    fileprivate func lost(_ p: MCPeerID) {
+        discovered[p] = nil
     }
 
     private func dropPartner() {
@@ -156,7 +169,6 @@ final class DuoLink: NSObject, ObservableObject {
     fileprivate func peerDisconnected() {
         if session.connectedPeers.isEmpty {
             dropPartner()
-            if searching { rebrowse() }
         }
     }
 }
@@ -186,14 +198,14 @@ extension DuoLink: MCSessionDelegate {
 extension DuoLink: MCNearbyServiceBrowserDelegate {
     func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID,
                  withDiscoveryInfo info: [String: String]?) {
-        // Only pair with the *other* app, and let exactly one side send the invitation.
+        // Only pair with the *other* app; the invite itself happens on the main queue.
         guard let theirRole = info?["role"], theirRole != role else { return }
-        guard peer.displayName < peerID.displayName else { return }
-        guard !session.connectedPeers.contains(peerID) else { return }
-        browser.invitePeer(peerID, to: session, withContext: nil, timeout: 15)
+        DispatchQueue.main.async { [weak self] in self?.found(peerID) }
     }
 
-    func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {}
+    func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
+        DispatchQueue.main.async { [weak self] in self?.lost(peerID) }
+    }
 }
 
 extension DuoLink: MCNearbyServiceAdvertiserDelegate {
