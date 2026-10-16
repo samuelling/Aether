@@ -153,13 +153,29 @@ private struct SettingsView: View {
                         Slider(value: $model.floorDBm, in: -105 ... -70, step: 1)
                     }
                     VStack(alignment: .leading) {
+                        HStack {
+                            Text("Response")
+                            Spacer()
+                            Text(String(format: "≈ %.1f s lag", model.approxLagSeconds))
+                                .foregroundStyle(.secondary)
+                                .monospacedDigit()
+                        }
+                        Slider(value: $model.response, in: 0.15...1.0) {
+                            Text("Response")
+                        } minimumValueLabel: {
+                            Text("Tight").font(.caption2)
+                        } maximumValueLabel: {
+                            Text("Drift").font(.caption2)
+                        }
+                    }
+                    VStack(alignment: .leading) {
                         Text("Chord change every \(Int(model.chordSeconds)) s")
                         Slider(value: $model.chordSeconds, in: 12...90, step: 2)
                     }
                 } header: {
                     Text("Field")
                 } footer: {
-                    Text("Each voiced device sings its own short phrase on its own loop length. Reach sets the faintest signal that still sings: lower it to hear the neighbors, raise it to hear only the room.")
+                    Text("Each voiced device sings its own short phrase on its own loop length. Reach sets the faintest signal that still sings: lower it to hear the neighbors, raise it to hear only the room. Response sets how quickly the sound follows the field: Tight for demonstrating (cup the phone and hear it dim), Drift for listening.")
                 }
             }
             .navigationTitle("Settings")

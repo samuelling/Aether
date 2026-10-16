@@ -127,6 +127,11 @@ final class FieldModel: NSObject, ObservableObject {
     @Published var voiceLimit: Int = 6
     @Published var floorDBm: Double = -95       // weakest signal that still sings
     @Published var chordSeconds: Double = 32
+    /// 1 = slow drift (default); toward 0.15 = tight, the sound follows your hands.
+    @Published var response: Double = 1.0
+
+    /// Rough end-to-end lag from a change in the field to a change in the sound.
+    var approxLagSeconds: Double { 0.25 + 2.2 * response }
 
     let ceilingDBm = -35.0
 
@@ -192,9 +197,9 @@ final class FieldModel: NSObject, ObservableObject {
         let now = ProcessInfo.processInfo.systemUptime
         if var s = store[id] {
             s.raw = rssi
-            s.fast += (rssi - s.fast) * 0.45
-            s.slow += (rssi - s.slow) * 0.12
-            s.jitter += (abs(rssi - s.slow) - s.jitter) * 0.15
+            s.fast += (rssi - s.fast) * alpha(1.7)
+            s.slow += (rssi - s.slow) * alpha(7.8)
+            s.jitter += (abs(rssi - s.slow) - s.jitter) * alpha(6.2)
             s.lastSeen = now
             s.samples += 1
             if s.name == nil { s.name = name }
@@ -223,7 +228,7 @@ final class FieldModel: NSObject, ObservableObject {
             if age > 12 { store[id] = nil; continue }
             let fade = age < 2.5 ? 1.0 : max(0, 1 - (age - 2.5) / 6)
             let target = min(1, max(0, (s.fast - floorDBm) / span)) * fade
-            s.level += (target - s.level) * 0.12
+            s.level += (target - s.level) * alpha(7.8)
             flux += abs(s.fast - s.lastFast)
             s.lastFast = s.fast
             let phrase = Phrase(seed: s.seed, scaleSize: scale.steps.count)
@@ -235,10 +240,10 @@ final class FieldModel: NSObject, ObservableObject {
 
         // Air: how much the whole field is moving, relative to its own baseline.
         let meanFlux = flux / Double(max(1, store.count))
-        fluxFast += (meanFlux - fluxFast) * 0.15
+        fluxFast += (meanFlux - fluxFast) * alpha(6.2)
         fluxSlow += (meanFlux - fluxSlow) * 0.004
         let gust = fluxFast / (fluxSlow + 0.05) - 1
-        air += (min(1, max(0, gust / 1.5)) - air) * 0.05
+        air += (min(1, max(0, gust / 1.5)) - air) * alpha(19.5)
 
         allocateVoices()
         playLoops(now: now, melodyBase: melodyBase)
@@ -292,7 +297,7 @@ final class FieldModel: NSObject, ObservableObject {
 
             // Live expression on whatever this slot is currently sounding
             for v in subs {
-                p.nLive[v] = Float(0.45 + 0.55 * s.level)
+                p.nLive[v] = Float((1 - liveDepth) + liveDepth * s.level)
                 p.nWow[v] = Float(s.jitterNorm * 28)       // a disturbed path = warped tape
             }
 
@@ -339,10 +344,24 @@ final class FieldModel: NSObject, ObservableObject {
         let density = min(1, Double(heard) / 20)
         p[.bedAmp] = Float(0.3 + 0.5 * density)
         p[.bedCut] = Float(0.15 + 0.25 * density + 0.6 * air)
+        p[.response] = Float(response)
         engine.setHalo(0.2 + 0.8 * air)
     }
 
     // MARK: Helpers
+
+    /// One-pole smoothing coefficient for a time constant given in updates
+    /// (RSSI reports or 30 Hz ticks), scaled by the Response control.
+    private func alpha(_ tau: Double) -> Double {
+        1 - exp(-1 / max(0.3, tau * response))
+    }
+
+    /// How hard live strength pushes on notes already sounding: gentler at drift,
+    /// near-total at tight so a cupped hand audibly dims the room.
+    private var liveDepth: Double {
+        let tight = 1 - (response - 0.15) / 0.85
+        return 0.55 + 0.4 * min(1, max(0, tight))
+    }
 
     private static func seed(for id: UUID) -> UInt32 {
         var h: UInt32 = 2_166_136_261

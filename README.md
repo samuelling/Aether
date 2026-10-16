@@ -38,6 +38,7 @@ Free-account installs expire after 7 days — press Run again to refresh.
 - iOS deliberately hides Wi-Fi signal strength from apps; Bluetooth LE is the closest open window onto the same band.
 - Many devices (especially Apple ones) rotate their Bluetooth address every ~15 minutes for privacy, so an emitter can vanish and reappear with a different phrase. That's the field reshuffling itself.
 - Settings: scale, root note, voice count (1–8), **Reach** (the faintest dBm that still sings), and how often the pad chord changes.
+- **Response** (Tight ⟷ Drift) scales every smoothing time constant between the radio and the sound: ≈ 0.6 s end-to-end at Tight, ≈ 2.5 s at Drift (default). Melodic notes still start on their loop schedule; Response changes how fast strength, wow, swells and the pad follow the field.
 
 ## Code map
 

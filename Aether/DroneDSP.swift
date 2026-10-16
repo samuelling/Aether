@@ -10,6 +10,7 @@ final class DroneParams {
 
     enum G: Int, CaseIterable {
         case master, bedAmp, bedCut
+        case response      // lag scale: 1 = drift (default), ~0.15 = tight
     }
 
     // Note voices — written at note-on (freq…pan, trig) or continuously (live, wow)
@@ -38,6 +39,7 @@ final class DroneParams {
         nPan = make(0, nv); nTrig = make(0, nv); nLive = make(1, nv); nWow = make(0, nv)
         bFreq = make(146.8, DroneParams.bedVoices)
         g = make(0, G.allCases.count)
+        g[G.response.rawValue] = 1
     }
 
     subscript(_ k: G) -> Float {
@@ -78,7 +80,6 @@ final class DroneDSP {
     private var bedAmp: Float = 0
     private var bedCut: Float = 400
 
-    private let attackCoef: Float
     private let releaseCoef: Float
     private let stealCoef: Float
 
@@ -97,8 +98,7 @@ final class DroneDSP {
             bs[BS.lfo.rawValue * nbCount + b] = 0.23 * Float(b)
         }
         for v in 0..<nvCount { ns[NS.wowPh.rawValue * nvCount + v] = 0.17 * Float(v) }
-        // Attack: one-pole toward 1.3 so it reaches 1 in ~2.4 s. Release: τ = 3 s (≈ 20 s tail).
-        attackCoef = 1 - expf(-1 / (1.6 * sampleRate))
+        // Release: τ = 3 s (≈ 20 s tail). Attack is set per block from the Response control.
         releaseCoef = expf(-1 / (3.0 * sampleRate))
         stealCoef = expf(-1 / (0.012 * sampleRate))       // ~12 ms fade when a voice is reused
     }
@@ -122,8 +122,12 @@ final class DroneDSP {
         let blockT = Float(frames) / sr
         let invN = 1 / Float(frames)
         let twoPi = 2 * Float.pi
-        let kLive = 1 - expf(-blockT / 1.5)
-        let kWow = 1 - expf(-blockT / 1.0)
+        // Response scales every expressive time constant (not the tails or the chord glide).
+        let lag = max(0.1, min(1.5, p[.response]))
+        let kLive = 1 - expf(-blockT / (1.5 * lag))
+        let kWow = 1 - expf(-blockT / (1.0 * lag))
+        // Attack: one-pole toward 1.3, reaching 1 in ~2.4 s at drift, ~0.4 s at tight.
+        let attackCoef = 1 - expf(-1 / (1.6 * lag * sr))
 
         // ---------- Note voices (the melody) ----------
         for v in 0..<nv {
@@ -220,10 +224,10 @@ final class DroneDSP {
 
         // ---------- Pad bed ----------
         let bedA0 = bedAmp
-        bedAmp += (p[.bedAmp] - bedAmp) * (1 - expf(-blockT / 3))
+        bedAmp += (p[.bedAmp] - bedAmp) * (1 - expf(-blockT / (3 * lag)))
         let bedAInc = (bedAmp - bedA0) * invN
         let cutTarget = 160 * powf(9, max(0, min(1, p[.bedCut])))
-        bedCut += (cutTarget - bedCut) * (1 - expf(-blockT / 2))
+        bedCut += (cutTarget - bedCut) * (1 - expf(-blockT / (2 * lag)))
         let gq = tanf(Float.pi * min(bedCut, sr * 0.45) / sr)
         let k: Float = 1.1
         let c1 = 1 / (1 + gq * (gq + k)), c2 = gq * c1, c3 = gq * c2
