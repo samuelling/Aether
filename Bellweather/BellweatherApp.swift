@@ -105,7 +105,7 @@ private struct BellSettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Sky") {
+                Section {
                     Picker("Weather", selection: $model.useLiveWeather) {
                         Text("Live").tag(true)
                         Text("Simulated").tag(false)
@@ -113,6 +113,10 @@ private struct BellSettingsView: View {
                     .pickerStyle(.segmented)
                     Toggle("Hourly bell", isOn: $model.hourlyBell)
                     Toggle("Drone drift", isOn: $model.driftOn)
+                } header: {
+                    Text("Sky")
+                } footer: {
+                    Text("Weather data by Open-Meteo.com (CC BY 4.0).")
                 }
                 Section {
                     Picker("Scale", selection: $model.scaleIndex) {
