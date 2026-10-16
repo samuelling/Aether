@@ -1,4 +1,5 @@
 import SwiftUI
+import AVKit
 
 @main
 struct AetherApp: App {
@@ -41,7 +42,7 @@ struct ContentView: View {
     }
 
     private var header: some View {
-        HStack(alignment: .firstTextBaseline) {
+        HStack(alignment: .center, spacing: 14) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("AETHER")
                     .font(.system(size: 22, weight: .light, design: .monospaced))
@@ -51,6 +52,8 @@ struct ContentView: View {
                     .foregroundStyle(.secondary)
             }
             Spacer()
+            AirPlayButton()
+                .frame(width: 30, height: 30)
             Button { showSettings = true } label: {
                 Image(systemName: "slider.horizontal.3").font(.title3)
             }
@@ -64,7 +67,11 @@ struct ContentView: View {
             stat("\(model.sources.filter { $0.level > 0.03 }.count)", "emitters")
             stat("\(model.voicedCount)", "voices")
             stat(model.isPlaying ? model.chordName : "–", "chord")
-            stat(String(format: "%.0f%%", model.air * 100), "air")
+            if model.arpOn {
+                stat(String(format: "%.0f", model.bpm), "bpm")
+            } else {
+                stat(String(format: "%.0f%%", model.air * 100), "air")
+            }
         }
     }
 
@@ -77,15 +84,28 @@ struct ContentView: View {
     }
 
     private var playButton: some View {
-        Button(action: model.togglePlay) {
-            Label(model.isPlaying ? "Fade out" : "Listen",
-                  systemImage: model.isPlaying ? "stop.fill" : "waveform")
-                .font(.headline)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
+        HStack(spacing: 10) {
+            Button(action: model.togglePlay) {
+                Label(model.isPlaying ? "Fade out" : "Listen",
+                      systemImage: model.isPlaying ? "stop.fill" : "waveform")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(model.isPlaying ? Color.white.opacity(0.15) : Color.cyan.opacity(0.7))
+
+            // Piano arpeggio on/off
+            Button { model.arpOn.toggle() } label: {
+                Image(systemName: "pianokeys")
+                    .font(.headline)
+                    .frame(width: 28)
+                    .padding(.vertical, 14)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(model.arpOn ? Color.purple.opacity(0.7) : Color.white.opacity(0.12))
+            .accessibilityLabel(model.arpOn ? "Arpeggio on" : "Arpeggio off")
         }
-        .buttonStyle(.borderedProminent)
-        .tint(model.isPlaying ? Color.white.opacity(0.15) : Color.cyan.opacity(0.7))
     }
 
     private var sourceList: some View {
@@ -96,6 +116,18 @@ struct ContentView: View {
             }
         }
     }
+}
+
+/// System AirPlay / audio-route picker.
+private struct AirPlayButton: UIViewRepresentable {
+    func makeUIView(context: Context) -> AVRoutePickerView {
+        let v = AVRoutePickerView()
+        v.tintColor = .white
+        v.activeTintColor = .systemCyan
+        v.prioritizesVideoDevices = false
+        return v
+    }
+    func updateUIView(_ uiView: AVRoutePickerView, context: Context) {}
 }
 
 private struct SourceRow: View {
@@ -145,6 +177,26 @@ private struct SettingsView: View {
                     Picker("Root", selection: $model.rootNote) {
                         ForEach(0..<12, id: \.self) { Text(noteNames[$0]).tag($0) }
                     }
+                    VStack(alignment: .leading) {
+                        Text("Octave: \(model.octave > 0 ? "+" : "")\(model.octave)")
+                        Slider(value: Binding(get: { Double(model.octave) },
+                                              set: { model.octave = Int($0.rounded()) }),
+                               in: -2...2, step: 1)
+                    }
+                }
+                Section {
+                    Toggle("Piano arpeggio", isOn: $model.arpOn)
+                    HStack {
+                        Text("Tempo")
+                        Spacer()
+                        Text(String(format: "%.0f BPM", model.bpm))
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    }
+                } header: {
+                    Text("Arpeggio")
+                } footer: {
+                    Text("A dusty upright wanders over the chord progression in lazy, swung eighths, stepping between chord tones with the odd passing note, leap or rest. The tempo is the field's own pulse: how often the signals cross their average, folded by octaves into a relaxed range. More devices bring more echo and room.")
                 }
                 Section {
                     VStack(alignment: .leading) {

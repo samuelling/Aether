@@ -21,6 +21,7 @@ struct RadioSource: Identifiable {
     var voice: Int? = nil
     var midi: Int = 60        // first note of its phrase (for color / display)
     var lastNote: TimeInterval = -100
+    var lastSign = 0          // side of its mean it was last on (for fluctuation rate)
 
     var label: String {
         if let name, !name.isEmpty { return name }
@@ -33,30 +34,51 @@ struct RadioSource: Identifiable {
 // MARK: - Musical scales and their slow chord cycles
 
 enum DroneScale: String, CaseIterable, Identifiable {
-    case pentatonic = "Pentatonic"
+    case pentatonic = "Major pentatonic"
+    case minorPentatonic = "Minor pentatonic"
+    case major = "Major (Ionian)"
     case lydian = "Lydian"
+    case mixolydian = "Mixolydian"
     case dorian = "Dorian"
+    case aeolian = "Natural minor (Aeolian)"
+    case phrygian = "Phrygian"
+    case wholeTone = "Whole tone"
     case hirajoshi = "Hirajoshi"
+    case insen = "In-sen"
     case open = "Open (sus2)"
 
     var id: String { rawValue }
     var steps: [Int] {
         switch self {
-        case .pentatonic: return [0, 2, 4, 7, 9]
-        case .lydian:     return [0, 2, 4, 6, 7, 9, 11]
-        case .dorian:     return [0, 2, 3, 5, 7, 9, 10]
-        case .hirajoshi:  return [0, 2, 3, 7, 8]
-        case .open:       return [0, 2, 7]
+        case .pentatonic:      return [0, 2, 4, 7, 9]
+        case .minorPentatonic: return [0, 3, 5, 7, 10]
+        case .major:           return [0, 2, 4, 5, 7, 9, 11]
+        case .lydian:          return [0, 2, 4, 6, 7, 9, 11]
+        case .mixolydian:      return [0, 2, 4, 5, 7, 9, 10]
+        case .dorian:          return [0, 2, 3, 5, 7, 9, 10]
+        case .aeolian:         return [0, 2, 3, 5, 7, 8, 10]
+        case .phrygian:        return [0, 1, 3, 5, 7, 8, 10]
+        case .wholeTone:       return [0, 2, 4, 6, 8, 10]
+        case .hirajoshi:       return [0, 2, 3, 7, 8]
+        case .insen:           return [0, 1, 5, 7, 10]
+        case .open:            return [0, 2, 7]
         }
     }
-    /// Chord roots, as scale degrees, that the pad bed drifts through.
+    /// Chord roots, as scale degrees, that the pad bed (and the arpeggio) drift through.
     var progression: [Int] {
         switch self {
-        case .pentatonic: return [0, 4, 1, 3]   // I6 · vi · IIsus · V
-        case .lydian:     return [0, 1, 5, 1]   // I · II · vi · II
-        case .dorian:     return [0, 3, 6, 3]   // i · IV · ♭VII · IV
-        case .hirajoshi:  return [0, 3, 1, 4]
-        case .open:       return [0, 1, 2, 1]
+        case .pentatonic:      return [0, 4, 1, 3]   // I6 · vi · IIsus · V
+        case .minorPentatonic: return [0, 2, 4, 1]   // i · iv · ♭VII · ♭III
+        case .major:           return [0, 5, 3, 4]   // I · vi · IV · V
+        case .lydian:          return [0, 1, 5, 1]   // I · II · vi · II
+        case .mixolydian:      return [0, 6, 3, 0]   // I · ♭VII · IV · I
+        case .dorian:          return [0, 3, 6, 3]   // i · IV · ♭VII · IV
+        case .aeolian:         return [0, 5, 2, 6]   // i · ♭VI · ♭III · ♭VII
+        case .phrygian:        return [0, 1, 0, 6]   // i · ♭II · i · ♭vii
+        case .wholeTone:       return [0, 1, 0, 2]
+        case .hirajoshi:       return [0, 3, 1, 4]
+        case .insen:           return [0, 2, 3, 1]
+        case .open:            return [0, 1, 2, 1]
         }
     }
     /// MIDI note for a scale-degree index (indices past the scale wrap into higher octaves).
@@ -121,9 +143,13 @@ final class FieldModel: NSObject, ObservableObject {
     @Published private(set) var air: Double = 0
     @Published private(set) var voicedCount = 0
     @Published private(set) var chordName = ""
+    /// Arpeggio tempo: the field's average fluctuation rate, folded by octaves into 44–104.
+    @Published private(set) var bpm: Double = 66
 
     @Published var scale: DroneScale = .pentatonic
     @Published var rootNote: Int = 2            // pitch class, D
+    @Published var octave: Int = 0              // transpose, −2…+2 octaves
+    @Published var arpOn = false                // stochastic piano arpeggio
     @Published var voiceLimit: Int = 10
     @Published var floorDBm: Double = -95       // weakest signal that still sings
     @Published var chordSeconds: Double = 32
@@ -148,6 +174,8 @@ final class FieldModel: NSObject, ObservableObject {
     private let engine = DroneEngine()
     private var timer: Timer?
     private var fluxFast = 0.0
+    private var crossings = 0                   // mean-crossings since the last tick
+    private var fluctRate = 1.1                 // per-device crossings per second (~20 s average)
     private var fluxSlow = 0.3
 
     override init() {
@@ -202,6 +230,13 @@ final class FieldModel: NSObject, ObservableObject {
             s.fast += (rssi - s.fast) * alpha(1.7)
             s.slow += (rssi - s.slow) * alpha(7.8)
             s.jitter += (abs(rssi - s.slow) - s.jitter) * alpha(6.2)
+            // Fluctuation rate: count crossings of the device's own mean (±1.5 dB dead band)
+            let dev = rssi - s.slow
+            let sign = dev > 1.5 ? 1 : (dev < -1.5 ? -1 : 0)
+            if sign != 0 {
+                if s.lastSign != 0 && sign != s.lastSign { crossings += 1 }
+                s.lastSign = sign
+            }
             s.lastSeen = now
             s.samples += 1
             if s.name == nil { s.name = name }
@@ -221,7 +256,7 @@ final class FieldModel: NSObject, ObservableObject {
         for v in pendingTriggers { engine.params.nTrig[v] += 1 }
         pendingTriggers.removeAll(keepingCapacity: true)
         let span = ceilingDBm - floorDBm
-        let melodyBase = 60 + rootNote               // C4…B4
+        let melodyBase = 60 + rootNote + 12 * octave // C4…B4, transposed
         var flux = 0.0
         var heard = 0
 
@@ -240,6 +275,12 @@ final class FieldModel: NSObject, ObservableObject {
             store[id] = s
         }
 
+        // Tempo from how restless the field is
+        let rateNow = Double(crossings) * 30 / Double(max(1, store.count))
+        crossings = 0
+        fluctRate += (rateNow - fluctRate) * (1 - exp(-1.0 / (30 * 20)))
+        updateTempo()
+
         // Air: how much the whole field is moving, relative to its own baseline.
         let meanFlux = flux / Double(max(1, store.count))
         fluxFast += (meanFlux - fluxFast) * alpha(6.2)
@@ -252,6 +293,27 @@ final class FieldModel: NSObject, ObservableObject {
         driveBed(now: now, heard: heard)
 
         sources = store.values.sorted { $0.level > $1.level }
+    }
+
+    /// Fold the fluctuation rate (crossings per minute) by octaves — halving or doubling —
+    /// choosing whichever fold sits closest to the current tempo, so it never lurches
+    /// across an octave boundary. Then glide there over ~12 s.
+    private func updateTempo() {
+        let raw = fluctRate * 60
+        guard raw > 1 else { return }
+        var target = bpm
+        var bestDistance = Double.infinity
+        for k in -4...7 {
+            let c = raw / pow(2, Double(k))
+            guard c >= 44 && c <= 104 else { continue }
+            let d = abs(log2(c / bpm))
+            if d < bestDistance { bestDistance = d; target = c }
+        }
+        // If the nearest fold is in a different octave, switch octave at once (half- or
+        // double-time keeps the pulse coherent) and glide only within it.
+        let octaves = (log2(target / bpm)).rounded()
+        if octaves != 0 { bpm *= pow(2, octaves) }
+        bpm += (target - bpm) * (1 - exp(-1.0 / (30 * 12)))
     }
 
     /// Sticky allocation: a source keeps its voice while it stays in the top N,
@@ -339,7 +401,7 @@ final class FieldModel: NSObject, ObservableObject {
         let p = engine.params
         let prog = scale.progression
         let r = prog[Int(now / chordSeconds) % prog.count]
-        let base = 48 + rootNote                     // C3…B3
+        let base = 48 + rootNote + 12 * max(octave, -1)   // C3…B3; never below C2 for the bass
         let notes = [scale.midi(base: base, degree: r) - 12,
                      scale.midi(base: base, degree: r + 2),
                      scale.midi(base: base, degree: r + 4),
@@ -353,6 +415,34 @@ final class FieldModel: NSObject, ObservableObject {
         p[.bedCut] = Float(0.15 + 0.25 * density + 0.6 * air)
         p[.response] = Float(response)
         engine.setHalo(0.2 + 0.8 * air)
+
+        // Arpeggio: chord tones over two octaves, plus scale tones for passing notes
+        let ap = engine.arpParams
+        let arpBase = 48 + rootNote + 12 * octave
+        let n = scale.steps.count
+        let chordDegrees = n >= 7 ? [r, r + 2, r + 4, r + 6] : [r, r + 2, r + 4]
+        var chordNotes = Set<Int>()
+        for o in 0..<2 { for d in chordDegrees { chordNotes.insert(scale.midi(base: arpBase, degree: d) + 12 * o) } }
+        let chordSorted = Array(chordNotes.sorted().prefix(ArpParams.maxChord))
+        let scaleSorted = Array(Set((r...(r + 2 * n)).map { scale.midi(base: arpBase, degree: $0) })
+            .sorted().prefix(ArpParams.maxScale))
+        // Keep the piano inside its sampled range (C2–C6, plus a little headroom)
+        func fold(_ m: Int) -> Int {
+            var x = m
+            while x > 96 { x -= 12 }
+            while x < 36 { x += 12 }
+            return x
+        }
+        let chordFolded = Array(Set(chordSorted.map(fold)).sorted())
+        let scaleFolded = Array(Set(scaleSorted.map(fold)).sorted())
+        for (i, m) in chordFolded.enumerated() { ap.chord[i] = Float(mtof(m)) }
+        for (i, m) in scaleFolded.enumerated() { ap.scale[i] = Float(mtof(m)) }
+        ap[.chordCount] = Float(chordFolded.count)
+        ap[.scaleCount] = Float(scaleFolded.count)
+        ap[.enabled] = (arpOn && isPlaying) ? 1 : 0
+        ap[.bpm] = Float(bpm)
+        ap[.density] = Float(density)
+        engine.setArpSpace(density: density, bpm: bpm)
     }
 
     // MARK: Helpers

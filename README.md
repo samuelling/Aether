@@ -19,6 +19,15 @@ The signal chain is soft sine-based tones with slow swells and ~20 s releases, a
 
 Moving matters because at 2.4 GHz the wavelength is ~12.5 cm. Reflections off walls interfere, so the field is full of nulls a few centimeters apart, and your body (mostly salt water) casts a radio shadow. Turning around or walking through a doorway changes who's singing.
 
+## Piano arpeggio (optional)
+
+Tap the piano-keys button (or Settings › Arpeggio) to add a stochastic arpeggio that wanders over the chord progression on a dusty upright.
+
+- **The piano** is synthesized from scratch at launch, not recorded. It uses slightly sharp, stiff-string overtones, two detuned strings per note, a quick-then-long two-stage decay, a felt hammer thump, a soft lowpass and tape saturation. Playback adds tape wow plus a faint bed of hiss and vinyl crackle.
+- **The notes** are lazy, swung eighths. The arpeggio takes a random walk over the current chord's tones, mostly stepwise, with occasional leaps, repeats, passing tones from the scale, two-note dyads, and rests. It rests more when the field is sparse and anchors on the bar line.
+- **The tempo** is the field's own pulse: how often each device's signal crosses its own average, about 20 s averaged across devices. That rate is folded by octaves (halving or doubling) into a relaxed 44–104 BPM, always choosing the fold closest to the current tempo, and glides there over ~12 s.
+- **The space** grows with the crowd. More devices bring more delay (on a dotted eighth of the tempo) and more room reverb, kept slight.
+
 ## Install on your iPhone
 
 Needs a Mac with Xcode 16 or newer (Xcode 26 for an iPhone on iOS 26). A free Apple ID is enough.
@@ -37,14 +46,16 @@ Free-account installs expire after 7 days — press Run again to refresh.
 - iOS only delivers continuous RSSI updates while the app is in the foreground, so the screen stays awake while playing.
 - iOS deliberately hides Wi-Fi signal strength from apps; Bluetooth LE is the closest open window onto the same band.
 - Many devices (especially Apple ones) rotate their Bluetooth address every ~15 minutes for privacy, so an emitter can vanish and reappear with a different phrase. That's the field reshuffling itself.
-- Settings: scale, root note, voice count (1–32), **Reach** (the faintest dBm that still sings), and how often the pad chord changes.
+- AirPlay works: use the AirPlay button on Aether's screen or Control Center. Keep the app in front so scanning stays live.
+- Settings: 12 scales/modes, root note, **Octave** transpose (−2…+2), voice count (1–32), **Reach** (the faintest dBm that still sings), and how often the pad chord changes.
 - **Response** (Tight ⟷ Drift) scales every smoothing time constant between the radio and the sound: ≈ 0.6 s end-to-end at Tight, ≈ 2.5 s at Drift (default). Melodic notes still start on their loop schedule; Response changes how fast strength, wow, swells and the pad follow the field.
 
 ## Code map
 
 - `FieldModel.swift` — CoreBluetooth scanning, per-emitter smoothing/jitter, phrase + loop generation, voice allocation, chord progression (30 Hz control loop)
 - `DroneDSP.swift` — realtime synth: a shared pool of 64 note voices (table-lookup sine + chorused twin + soft overtones, slow envelope, tape wow; least-recently-used reuse) and a 4-voice filtered-saw pad bed; lock-free parameter block
-- `DroneEngine.swift` — AVAudioEngine graph (delay → cathedral reverb, plus octave-up shimmer hall), session handling, fade in/out
+- `DroneEngine.swift` — AVAudioEngine graph (delay → cathedral reverb, an octave-up shimmer hall, and the arpeggio's own delay → hall bus), session handling, fade in/out
 - `RadarView.swift` — polar map of the field
-- `ContentView.swift` — app entry, main screen, settings sheet
+- `ArpDSP.swift` — synthesized dusty-upright multisample, stochastic arpeggiator, tape wow, hiss and crackle
+- `ContentView.swift` — app entry, main screen, settings sheet, AirPlay button
 - `Assets.xcassets` — app icon (three tapered waves, rendered at 1024 px)
