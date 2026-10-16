@@ -145,7 +145,7 @@ Both apps are iPhone-only, so one set per app: **6.9" iPhone, 1320 × 2868 px po
 ## Before you upload
 
 - Set each target's Team to your **paid** team (not "Personal Team"). If Xcode says a bundle ID is unavailable, add a suffix (e.g. `com.samuelling.aether.app`).
-- Version is 1.0, Build 1. Every later upload needs a higher Build number.
+- Version is 1.0, Build 2 (Build 1 was the first upload; Build 2 adds the Leitmotif listener sync and drops Aether's piano arpeggio). Every later upload needs a higher Build number. Once 1.0 is live, the next release also needs a new Version (e.g. 1.1).
 - Export compliance is pre-answered (no non-exempt encryption).
 - EU: App Store Connect asks for your Digital Services Act trader status. Whether you count as a trader is your call; a hobbyist publishing free apps with no business behind them would typically choose non-trader.
 - Turn on GitHub Pages for this repo (Settings › Pages › Deploy from branch › main › /docs) so the privacy and support URLs above go live.
