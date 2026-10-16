@@ -36,10 +36,29 @@ struct DuoState: Codable, Equatable {
 /// connects automatically, and keeps both sides informed. If the partner goes quiet for
 /// 10 s it is dropped, and each app simply carries on solo until they find each other again.
 ///
+/// Roles: Aether and Bellweathered are the two *leads*; they pair with each other as before.
+/// Any other role (Leitmotif) is a *listener*: it never invites and never sends, and both
+/// leads invite it into their sessions, so it hears everything without changing the duo.
+///
 /// Not actor-isolated: every callback hops to the main queue before touching state, and
 /// `onState` is always called on the main queue.
 final class DuoLink: NSObject, ObservableObject {
     static let serviceType = "aether-duo"      // must match NSBonjourServices in Info.plist
+    static let leadRoles: Set<String> = ["aether", "bellweather"]
+
+    /// "aether-1A2B3C" → "aether"
+    static func role(of peer: MCPeerID) -> String {
+        String(peer.displayName.split(separator: "-").first ?? "")
+    }
+
+    static func appName(of role: String) -> String {
+        switch role {
+        case "aether": return "Aether"
+        case "bellweather": return "Bellweathered"
+        case "leitmotif": return "Leitmotif"
+        default: return role
+        }
+    }
 
     enum Phase: Equatable { case off, searching, connected, paused }
 
@@ -48,6 +67,8 @@ final class DuoLink: NSObject, ObservableObject {
     @Published private(set) var phase: Phase = .off
     /// When the current search gives up (nil = searching indefinitely, or not searching).
     @Published private(set) var searchEnds: Date?
+    /// Listener apps (Leitmotif) currently connected to us, by app name. Leads only.
+    @Published private(set) var listeners: [String] = []
     /// User settings, persisted.
     @Published private(set) var enabled: Bool
     @Published private(set) var timeoutMinutes: Int       // 0 = never stop looking
@@ -60,6 +81,9 @@ final class DuoLink: NSObject, ObservableObject {
     var isConnected: Bool { partner != nil }
 
     private let role: String
+    /// Roles whose state this app wants: the other lead, or (for a listener) both leads.
+    private let listens: Set<String>
+    private var isListener: Bool { !DuoLink.leadRoles.contains(role) }
     private let peer: MCPeerID
     private let session: MCSession
     private var advertiser: MCNearbyServiceAdvertiser?
@@ -79,6 +103,7 @@ final class DuoLink: NSObject, ObservableObject {
 
     init(role: String) {
         self.role = role
+        listens = DuoLink.leadRoles.contains(role) ? DuoLink.leadRoles.subtracting([role]) : DuoLink.leadRoles
         let d = UserDefaults.standard
         // A stable name per install keeps the invite tie-break deterministic.
         let key = "duo.peerSuffix"
@@ -202,7 +227,7 @@ final class DuoLink: NSObject, ObservableObject {
 
     private func checkAlive() {
         if partner != nil && Date().timeIntervalSince(lastHeard) > 10 { dropPartner() }
-        guard phase == .searching, session.connectedPeers.isEmpty else { return }
+        guard phase == .searching, !hasPartnerPeer else { return }
         if let end = searchEnds, Date() >= end {
             // Nobody turned up: stop advertising and listening until asked again.
             radiosOff()
@@ -214,9 +239,22 @@ final class DuoLink: NSObject, ObservableObject {
         for p in Array(discovered.keys) { inviteIfNeeded(p) }
     }
 
-    /// Main queue only. Exactly one side invites (the lower display name), at most every 12 s.
+    /// A connected peer whose state we care about (a listener connected to us doesn't count).
+    private var hasPartnerPeer: Bool {
+        session.connectedPeers.contains { listens.contains(DuoLink.role(of: $0)) }
+    }
+
+    /// Exactly one side of each pair invites: a lead always invites a listener; between
+    /// the leads, the lower display name invites. Listeners never invite.
+    private func shouldInvite(_ p: MCPeerID) -> Bool {
+        if isListener { return false }
+        if !DuoLink.leadRoles.contains(DuoLink.role(of: p)) { return true }
+        return peer.displayName < p.displayName
+    }
+
+    /// Main queue only. At most one invite per peer every 12 s.
     fileprivate func inviteIfNeeded(_ p: MCPeerID) {
-        guard radiosOn, let browser, peer.displayName < p.displayName else { return }
+        guard radiosOn, let browser, shouldInvite(p) else { return }
         guard !session.connectedPeers.contains(where: { $0.displayName == p.displayName }) else { return }
         let last = discovered[p] ?? .distantPast
         guard Date().timeIntervalSince(last) > 12 else { return }
@@ -247,17 +285,27 @@ final class DuoLink: NSObject, ObservableObject {
 
     fileprivate func received(_ data: Data, from name: String) {
         guard enabled,
-              let s = try? JSONDecoder().decode(DuoState.self, from: data), s.role != role else { return }
+              let s = try? JSONDecoder().decode(DuoState.self, from: data), listens.contains(s.role) else { return }
         lastHeard = Date()
         partner = s
-        partnerName = s.role == "aether" ? "Aether" : "Bellweathered"
+        partnerName = DuoLink.appName(of: s.role)
         phase = .connected
         searchEnds = nil
         onState?(s)
     }
 
     fileprivate func peerDisconnected() {
-        if session.connectedPeers.isEmpty { dropPartner() }
+        refreshListeners()
+        if !hasPartnerPeer { dropPartner() }
+    }
+
+    fileprivate func refreshListeners() {
+        guard !isListener else { return }
+        let names = Set(session.connectedPeers.map { DuoLink.role(of: $0) }
+            .filter { !DuoLink.leadRoles.contains($0) }
+            .map { DuoLink.appName(of: $0) })
+        let sorted = names.sorted()
+        if sorted != listeners { listeners = sorted }
     }
 
     fileprivate var acceptsInvites: Bool { enabled && radiosOn }
@@ -269,6 +317,8 @@ extension DuoLink: MCSessionDelegate {
     func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
         if state == .notConnected {
             DispatchQueue.main.async { [weak self] in self?.peerDisconnected() }
+        } else if state == .connected {
+            DispatchQueue.main.async { [weak self] in self?.refreshListeners() }
         }
     }
 
@@ -302,12 +352,16 @@ extension DuoLink: MCNearbyServiceAdvertiserDelegate {
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser,
                     didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?,
                     invitationHandler: @escaping (Bool, MCSession?) -> Void) {
-        // Accept unless we're already paired with someone else. A relaunched partner keeps
-        // its name, so a stale entry for the same name doesn't block the new invite.
+        // Accept unless we're already paired with a different app of the same role (a second
+        // Aether, say). A relaunched partner keeps its name, so a stale entry for the same
+        // name doesn't block the new invite; a listener happily joins both leads.
         let name = peerID.displayName
+        let theirRole = DuoLink.role(of: peerID)
         DispatchQueue.main.async { [weak self] in
             guard let self else { invitationHandler(false, nil); return }
-            let ok = self.acceptsInvites && self.session.connectedPeers.allSatisfy { $0.displayName == name }
+            let ok = self.acceptsInvites && !self.session.connectedPeers.contains {
+                DuoLink.role(of: $0) == theirRole && $0.displayName != name
+            }
             invitationHandler(ok, ok ? self.session : nil)
         }
     }

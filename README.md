@@ -39,6 +39,8 @@ Open each app on its own iPhone, near each other, and they find each other autom
 | Leads | **Harmony**: root and scale | **Time**: tempo and the chord timeline |
 | Follows | Aether's tempo (sets its echo); Aether's chord changes steer its drone; a crowded room livens its melody | Bellweathered's key and scale; daylight in its sky opens Aether's pad a little |
 
+A third app, **[Leitmotif](https://github.com/samuelling/Leitmotif)**, can join as a listener: it sings your own phone's data traffic as a solo line over the duo, taking key and scale from Bellweathered and tempo and chords from Aether. Listeners never send and never invite. Both leads invite them into their sessions, so the duo pairs exactly as before, and each lead's Settings › Duo shows who is "Listening in".
+
 Both follow toggles live in each app's Settings › Duo. If the phones lose each other, each carries on solo, and they re-sync when they meet again. Messages are tiny and arrive in tens of milliseconds, well inside what ambient tempos and multi-second glides need. Tight beat-phase lock (Ableton Link) is the natural next step if a beat-locked arpeggio between the two is ever wanted.
 
 To run Bellweathered, pick the **Bellweather** scheme in Xcode's toolbar (next to the device menu), set its Team the same way, and press ▶. It asks for your approximate location (to hear your weather and sun) and for local-network access (to find Aether).
@@ -71,7 +73,7 @@ Free-account installs expire after 7 days — press Run again to refresh.
 - `DroneDSP.swift` — realtime synth: a shared pool of 64 note voices (table-lookup sine + chorused twin + soft overtones, slow envelope, tape wow; least-recently-used reuse) and a 4-voice filtered-saw pad bed; lock-free parameter block
 - `DroneEngine.swift` — AVAudioEngine graph (delay → cathedral reverb, an octave-up shimmer hall, and the arpeggio's own delay → hall bus), session handling, fade in/out
 - `RadarView.swift` — polar map of the field
-- `Shared/DuoLink.swift` — the duo protocol both apps compile in
+- `Shared/DuoLink.swift` — the duo protocol both apps compile in (Leitmotif keeps an identical copy in its `Duo/` folder; change both together)
 - `Bellweather/` — Bellweathered: `SkyModel` (weather, sun/moon, mappings, loops, duo), `BellDSP` (drone, wind, rain/snow, bell, melody voices), `BellEngine` (delay → reverb graph), `SkyView` (the animated sky), `Sky` (astronomy, Open-Meteo, simulated sky)
 - `ArpDSP.swift` — synthesized dusty-upright multisample, stochastic arpeggiator, tape wow, hiss and crackle
 - `ContentView.swift` — app entry, main screen, settings sheet, AirPlay button
