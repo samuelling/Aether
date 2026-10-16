@@ -14,7 +14,7 @@ def waves_layer(base, alpha):
     u = np.clip((xx - x0) / (x1 - x0), 0, 1)
     window = np.clip(np.sin(np.pi * u), 0, 1)
     fade = window ** 1.1
-    for yc, amp, ph, hue in [(0.69, 0.040, 0.0, 0.52), (0.755, 0.050, 1.2, 0.60), (0.82, 0.040, 2.4, 0.74)]:
+    for yc, amp, ph, hue in [(0.72, 0.036, 0.0, 0.52), (0.785, 0.046, 1.2, 0.60), (0.85, 0.036, 2.4, 0.74)]:
         A = amp * S * window ** 1.4
         f = yc * S + A * np.sin(2 * np.pi * 2.0 * u + ph)
         dfdx = np.gradient(f[0])[None, :]
@@ -59,7 +59,7 @@ def bell_bg():
     below = (yy >= hy)[..., None]
     return sky * (1 - below) + water * below
 
-def tile(bg, symbol, number, name, glow_rgb, out):
+def tile(bg, symbol, number, mass, name, glow_rgb, out):
     img = Image.fromarray(np.clip(bg, 0, 255).astype(np.uint8), "RGB").convert("RGBA")
     # Element-tile hairline frame
     frame = Image.new("RGBA", (S, S), (0, 0, 0, 0))
@@ -72,7 +72,7 @@ def tile(bg, symbol, number, name, glow_rgb, out):
     sym_font = ImageFont.truetype(FONT % "Light", int(S * 0.43))
     layer = Image.new("RGBA", (S, S), (0, 0, 0, 0))
     ld = ImageDraw.Draw(layer)
-    cx, cy = S * 0.5, S * 0.43
+    cx, cy = S * 0.5, S * 0.40
     ld.text((cx, cy), symbol, font=sym_font, anchor="mm", fill=(250, 251, 255, 255))
     glow = Image.new("RGBA", (S, S), (0, 0, 0, 0))
     gd = ImageDraw.Draw(glow)
@@ -81,14 +81,26 @@ def tile(bg, symbol, number, name, glow_rgb, out):
     img = Image.alpha_composite(img, glow)
     img = Image.alpha_composite(img, layer)
 
-    # Atomic number (top-left) and name (bottom), in the tile's quiet voice
-    small = ImageFont.truetype(FONT % "Regular", int(S * 0.075))
-    tiny = ImageFont.truetype(FONT % "Regular", int(S * 0.058))
+    # Periodic-table furniture: atomic number (top-left), atomic mass (top-right),
+    # name under the symbol.
+    small = ImageFont.truetype(FONT % "Regular", int(S * 0.078))
+    tiny = ImageFont.truetype(FONT % "Medium", int(S * 0.050))
     td = ImageDraw.Draw(img)
-    td.text((m + S * 0.06, m + S * 0.045), number, font=small, fill=(255, 255, 255, 200))
+    inset_x, inset_y = m + S * 0.055, m + S * 0.04
+    td.text((inset_x, inset_y), number, font=small, fill=(255, 255, 255, 215))
+    td.text((S - inset_x, inset_y), mass, font=small, anchor="ra", fill=(255, 255, 255, 150))
+    # Name, letter-spaced, centred under the symbol
+    label, track = name.upper(), S * 0.012
+    widths = [td.textlength(ch, font=tiny) for ch in label]
+    x = S * 0.5 - (sum(widths) + track * (len(label) - 1)) / 2
+    for ch, w in zip(label, widths):
+        td.text((x, S * 0.632), ch, font=tiny, anchor="lm", fill=(255, 255, 255, 175))
+        x += w + track
 
     img.convert("RGB").resize((1024, 1024), Image.LANCZOS).save(out)
 
-tile(aether_bg(), "Ae", "1", "Aether", (120, 210, 255), sys.argv[1])
-tile(bell_bg(), "Bw", "2", "Bell Weather", (255, 190, 120), sys.argv[2])
+# 119 and 120 are the next undiscovered elements; the masses are each app's medium:
+# 2402 MHz (Bluetooth advertising channel 37) and 1013 hPa (one standard atmosphere).
+tile(aether_bg(), "Ae", "119", "[2402]", "Aether", (120, 210, 255), sys.argv[1])
+tile(bell_bg(), "Bw", "120", "[1013]", "Bell Weather", (255, 190, 120), sys.argv[2])
 print("ok")
