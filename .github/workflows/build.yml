@@ -1,6 +1,7 @@
 name: Build
 
-# Compile-check Aether and Bellweathered for a generic iPhone, unsigned.
+# Compile-check Aether, Bellweathered and Ambit (both editions, with the tunnel) for a generic
+# iPhone, unsigned.
 on:
   push:
   pull_request:
@@ -12,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [Aether, Bellweather]
+        target: [Aether, Bellweather, Ambit, AmbitName]
     steps:
       - uses: actions/checkout@v4
       - name: Build ${{ matrix.target }}
@@ -25,4 +26,4 @@ jobs:
         if: always()
         run: |
           grep -E "^/.*\.swift:[0-9]+:[0-9]+: (warning|error):" build.log | sort -u | head -40 | \
-            sed -E 's#^.*/(Aether|Bellweather|Shared)/([^:]+):([0-9]+):[0-9]+: (warning|error): (.*)$#::\4 file=\1/\2,line=\3::\5#' || true
+            sed -E 's#^.*/(Aether|Bellweather|Shared|Ambit/[A-Za-z]+)/([^:]+):([0-9]+):[0-9]+: (warning|error): (.*)$#::\4 file=\1/\2,line=\3::\5#' || true

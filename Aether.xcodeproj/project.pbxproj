@@ -6,9 +6,40 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		AE000000000000000000006B /* AmbitNameTunnel.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AE0000000000000000000077 /* AmbitNameTunnel.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		AE000000000000000000006A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AE0000000000000000000009 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AE0000000000000000000070;
+			remoteInfo = AmbitNameTunnel;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AE0000000000000000000064 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				AE000000000000000000006B /* AmbitNameTunnel.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		AE0000000000000000000001 /* Aether.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Aether.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AE0000000000000000000020 /* Bellweather.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Bellweather.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AE0000000000000000000057 /* Ambit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ambit.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AE0000000000000000000068 /* AmbitName.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AmbitName.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AE0000000000000000000077 /* AmbitNameTunnel.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = AmbitNameTunnel.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -25,6 +56,61 @@
 		AE0000000000000000000022 /* Shared */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Shared;
+			sourceTree = "<group>";
+		};
+		AE0000000000000000000040 /* Core */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Core;
+			sourceTree = "<group>";
+		};
+		AE0000000000000000000041 /* Aether */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Aether;
+			sourceTree = "<group>";
+		};
+		AE0000000000000000000042 /* Bell */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Bell;
+			sourceTree = "<group>";
+		};
+		AE0000000000000000000043 /* Motif */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Motif;
+			sourceTree = "<group>";
+		};
+		AE0000000000000000000044 /* Orbitakt */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Orbitakt;
+			sourceTree = "<group>";
+		};
+		AE0000000000000000000045 /* Leitmotif */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Leitmotif;
+			sourceTree = "<group>";
+		};
+		AE0000000000000000000046 /* LeitmotifName */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = LeitmotifName;
+			sourceTree = "<group>";
+		};
+		AE0000000000000000000047 /* NameShared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = NameShared;
+			sourceTree = "<group>";
+		};
+		AE0000000000000000000048 /* NameTunnel */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = NameTunnel;
+			sourceTree = "<group>";
+		};
+		AE0000000000000000000049 /* AppIcon */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = AppIcon;
+			sourceTree = "<group>";
+		};
+		AE000000000000000000004A /* AppIconName */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = AppIconName;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -44,6 +130,27 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AE0000000000000000000052 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AE0000000000000000000062 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AE0000000000000000000072 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -53,6 +160,7 @@
 				AE0000000000000000000002 /* Aether */,
 				AE0000000000000000000021 /* Bellweather */,
 				AE0000000000000000000022 /* Shared */,
+				AE000000000000000000003F /* Ambit */,
 				AE0000000000000000000005 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -62,8 +170,29 @@
 			children = (
 				AE0000000000000000000001 /* Aether.app */,
 				AE0000000000000000000020 /* Bellweather.app */,
+				AE0000000000000000000057 /* Ambit.app */,
+				AE0000000000000000000068 /* AmbitName.app */,
+				AE0000000000000000000077 /* AmbitNameTunnel.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		AE000000000000000000003F /* Ambit */ = {
+			isa = PBXGroup;
+			children = (
+				AE0000000000000000000040 /* Core */,
+				AE0000000000000000000041 /* Aether */,
+				AE0000000000000000000042 /* Bell */,
+				AE0000000000000000000043 /* Motif */,
+				AE0000000000000000000044 /* Orbitakt */,
+				AE0000000000000000000045 /* Leitmotif */,
+				AE0000000000000000000046 /* LeitmotifName */,
+				AE0000000000000000000047 /* NameShared */,
+				AE0000000000000000000048 /* NameTunnel */,
+				AE0000000000000000000049 /* AppIcon */,
+				AE000000000000000000004A /* AppIconName */,
+			);
+			path = Ambit;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -115,6 +244,88 @@
 			productReference = AE0000000000000000000020 /* Bellweather.app */;
 			productType = "com.apple.product-type.application";
 		};
+		AE0000000000000000000050 /* Ambit */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AE0000000000000000000054 /* Build configuration list for PBXNativeTarget "Ambit" */;
+			buildPhases = (
+				AE0000000000000000000051 /* Sources */,
+				AE0000000000000000000052 /* Frameworks */,
+				AE0000000000000000000053 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				AE0000000000000000000040 /* Core */,
+				AE0000000000000000000041 /* Aether */,
+				AE0000000000000000000042 /* Bell */,
+				AE0000000000000000000043 /* Motif */,
+				AE0000000000000000000044 /* Orbitakt */,
+				AE0000000000000000000045 /* Leitmotif */,
+				AE0000000000000000000049 /* AppIcon */,
+			);
+			name = Ambit;
+			packageProductDependencies = (
+			);
+			productName = Ambit;
+			productReference = AE0000000000000000000057 /* Ambit.app */;
+			productType = "com.apple.product-type.application";
+		};
+		AE0000000000000000000060 /* AmbitName */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AE0000000000000000000065 /* Build configuration list for PBXNativeTarget "AmbitName" */;
+			buildPhases = (
+				AE0000000000000000000061 /* Sources */,
+				AE0000000000000000000062 /* Frameworks */,
+				AE0000000000000000000063 /* Resources */,
+				AE0000000000000000000064 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AE0000000000000000000069 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				AE0000000000000000000040 /* Core */,
+				AE0000000000000000000041 /* Aether */,
+				AE0000000000000000000042 /* Bell */,
+				AE0000000000000000000043 /* Motif */,
+				AE0000000000000000000044 /* Orbitakt */,
+				AE0000000000000000000046 /* LeitmotifName */,
+				AE0000000000000000000047 /* NameShared */,
+				AE000000000000000000004A /* AppIconName */,
+			);
+			name = AmbitName;
+			packageProductDependencies = (
+			);
+			productName = AmbitName;
+			productReference = AE0000000000000000000068 /* AmbitName.app */;
+			productType = "com.apple.product-type.application";
+		};
+		AE0000000000000000000070 /* AmbitNameTunnel */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AE0000000000000000000074 /* Build configuration list for PBXNativeTarget "AmbitNameTunnel" */;
+			buildPhases = (
+				AE0000000000000000000071 /* Sources */,
+				AE0000000000000000000072 /* Frameworks */,
+				AE0000000000000000000073 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				AE0000000000000000000048 /* NameTunnel */,
+				AE0000000000000000000047 /* NameShared */,
+			);
+			name = AmbitNameTunnel;
+			packageProductDependencies = (
+			);
+			productName = AmbitNameTunnel;
+			productReference = AE0000000000000000000077 /* AmbitNameTunnel.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -129,6 +340,15 @@
 						CreatedOnToolsVersion = 16.0;
 					};
 					AE0000000000000000000026 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					AE0000000000000000000050 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					AE0000000000000000000060 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					AE0000000000000000000070 = {
 						CreatedOnToolsVersion = 16.0;
 					};
 				};
@@ -149,6 +369,9 @@
 			targets = (
 				AE0000000000000000000006 /* Aether */,
 				AE0000000000000000000026 /* Bellweather */,
+				AE0000000000000000000050 /* Ambit */,
+				AE0000000000000000000060 /* AmbitName */,
+				AE0000000000000000000070 /* AmbitNameTunnel */,
 			);
 		};
 /* End PBXProject section */
@@ -162,6 +385,27 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		AE0000000000000000000025 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AE0000000000000000000053 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AE0000000000000000000063 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AE0000000000000000000073 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -185,7 +429,36 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AE0000000000000000000051 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AE0000000000000000000061 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AE0000000000000000000071 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AE0000000000000000000069 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AE0000000000000000000070 /* AmbitNameTunnel */;
+			targetProxy = AE000000000000000000006A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		AE0000000000000000000012 /* Debug */ = {
@@ -367,6 +640,192 @@
 			};
 			name = Release;
 		};
+		AE0000000000000000000055 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y4HDFDP479;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Ambit-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Ambit";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Ambit's Aether listens to the Bluetooth signals around you and turns their strength and fluctuation into sound.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Ambit uses your approximate location to hear the weather and the sun where you are, and to know which satellites are overhead.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.samuelling.ambit;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		AE0000000000000000000056 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y4HDFDP479;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Ambit-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Ambit";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Ambit's Aether listens to the Bluetooth signals around you and turns their strength and fluctuation into sound.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Ambit uses your approximate location to hear the weather and the sun where you are, and to know which satellites are overhead.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.samuelling.ambit;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		AE0000000000000000000066 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = AmbitName.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y4HDFDP479;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "AmbitName-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Ambit Name";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Ambit's Aether listens to the Bluetooth signals around you and turns their strength and fluctuation into sound.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Ambit uses your approximate location to hear the weather and the sun where you are, and to know which satellites are overhead.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.samuelling.ambit.name;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		AE0000000000000000000067 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = AmbitName.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y4HDFDP479;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "AmbitName-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Ambit Name";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Ambit's Aether listens to the Bluetooth signals around you and turns their strength and fluctuation into sound.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Ambit uses your approximate location to hear the weather and the sun where you are, and to know which satellites are overhead.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.samuelling.ambit.name;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		AE0000000000000000000075 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = AmbitNameTunnel.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y4HDFDP479;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "AmbitNameTunnel-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = AmbitNameTunnel;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.samuelling.ambit.name.tunnel;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		AE0000000000000000000076 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = AmbitNameTunnel.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y4HDFDP479;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "AmbitNameTunnel-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = AmbitNameTunnel;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.samuelling.ambit.name.tunnel;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -393,6 +852,33 @@
 			buildConfigurations = (
 				AE0000000000000000000028 /* Debug */,
 				AE0000000000000000000029 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AE0000000000000000000054 /* Build configuration list for PBXNativeTarget "Ambit" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AE0000000000000000000055 /* Debug */,
+				AE0000000000000000000056 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AE0000000000000000000065 /* Build configuration list for PBXNativeTarget "AmbitName" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AE0000000000000000000066 /* Debug */,
+				AE0000000000000000000067 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AE0000000000000000000074 /* Build configuration list for PBXNativeTarget "AmbitNameTunnel" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AE0000000000000000000075 /* Debug */,
+				AE0000000000000000000076 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
