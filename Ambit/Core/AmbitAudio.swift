@@ -165,11 +165,10 @@ final class AmbitAudio {
         engine.connect(limiter, to: engine.outputNode, format: nil)
         // A safety net, not a sound: slow enough to release that it never chews on the kick
         // or the drone, and the mix is staged to stay under it.
-        if let au = limiter.audioUnit {
-            AudioUnitSetParameter(au, kLimiterParam_AttackTime, kAudioUnitScope_Global, 0, 0.008, 0)
-            AudioUnitSetParameter(au, kLimiterParam_DecayTime, kAudioUnitScope_Global, 0, 0.15, 0)
-            AudioUnitSetParameter(au, kLimiterParam_PreGain, kAudioUnitScope_Global, 0, 0, 0)
-        }
+        let au = limiter.audioUnit
+        AudioUnitSetParameter(au, kLimiterParam_AttackTime, kAudioUnitScope_Global, 0, 0.008, 0)
+        AudioUnitSetParameter(au, kLimiterParam_DecayTime, kAudioUnitScope_Global, 0, 0.15, 0)
+        AudioUnitSetParameter(au, kLimiterParam_PreGain, kAudioUnitScope_Global, 0, 0, 0)
         main.outputVolume = 0.8
         for layer in Layer.allCases {
             let bus = buses[layer.rawValue]
