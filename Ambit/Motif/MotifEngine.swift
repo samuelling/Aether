@@ -32,7 +32,7 @@ final class MotifEngine {
         // Synthesize the piano off the main thread (a fraction of a second of work).
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let s = PianoSampler()
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
                 self.piano = s
                 self.dsp?.install(s)

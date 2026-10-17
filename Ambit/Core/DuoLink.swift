@@ -111,10 +111,11 @@ final class DuoLink: ObservableObject {
         s.role = role
         seq += 1
         s.seq = seq
+        let msg = s
         for m in DuoLink.members {
             guard let other = m.link, other !== self, other.listens.contains(role) else { continue }
             // Async, so a reply sent from inside a receiver never re-enters the sender.
-            DispatchQueue.main.async { [weak other] in other?.received(s) }
+            DispatchQueue.main.async { [weak other] in other?.received(msg) }
         }
     }
 

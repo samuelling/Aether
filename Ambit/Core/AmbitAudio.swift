@@ -112,7 +112,9 @@ final class AmbitAudio {
         let main = engine.mainMixerNode
         engine.attach(limiter)
         engine.connect(main, to: limiter, format: format)
-        engine.connect(limiter, to: engine.outputNode, format: format)
+        // No fixed format into the output node, so it re-negotiates with the hardware after a
+        // route change (AirPlay, Bluetooth headphones at 44.1 kHz).
+        engine.connect(limiter, to: engine.outputNode, format: nil)
         main.outputVolume = 0.85
         for layer in Layer.allCases {
             let bus = buses[layer.rawValue]
