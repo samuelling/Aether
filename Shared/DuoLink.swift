@@ -37,7 +37,7 @@ struct DuoState: Codable, Equatable {
 /// 10 s it is dropped, and each app simply carries on solo until they find each other again.
 ///
 /// Roles: Aether and Bellweathered are the two *leads*; they pair with each other as before.
-/// Any other role (Leitmotif) is a *listener*: it never invites and never sends, and both
+/// Any other role (Leitmotif, Orbitakt) is a *listener*: it never invites and never sends, and both
 /// leads invite it into their sessions, so it hears everything without changing the duo.
 ///
 /// Not actor-isolated: every callback hops to the main queue before touching state, and
@@ -56,6 +56,7 @@ final class DuoLink: NSObject, ObservableObject {
         case "aether": return "Aether"
         case "bellweather": return "Bellweathered"
         case "leitmotif": return "Leitmotif"
+        case "orbitakt": return "Orbitakt"
         default: return role
         }
     }
