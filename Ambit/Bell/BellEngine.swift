@@ -32,7 +32,9 @@ final class BellEngine {
         band.frequency = 6000
         band.bypass = false
         reverbLP.globalGain = -4
-        host.register(.bell) { [weak self] engine, format, out in self?.build(engine, format, out) }
+        host.register(.bell, gate: gate, effects: [delay, reverb, reverbLP]) { [weak self] engine, format, out in
+            self?.build(engine, format, out)
+        }
     }
 
     /// Delay on 1.5 beats (the web default), kept inside AVAudioUnitDelay's 2 s limit.

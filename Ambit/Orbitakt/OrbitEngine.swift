@@ -35,7 +35,9 @@ final class OrbitEngine {
         lp.frequency = 6000
         lp.bypass = false
         eq.globalGain = 0
-        host.register(.orbit) { [weak self] engine, format, out in self?.build(engine, format, out) }
+        host.register(.orbit, gate: gate, effects: [reverb, eq]) { [weak self] engine, format, out in
+            self?.build(engine, format, out)
+        }
     }
 
     /// 0…1: how much plate.
@@ -71,7 +73,7 @@ final class OrbitEngine {
         let dry = AVAudioSourceNode(format: format, renderBlock: gatedRender(gate) { n, l, r in
             dsp.render(frames: n, left: l, right: r)
         })
-        let send = AVAudioSourceNode(format: format, renderBlock: gatedRender(gate) { n, l, r in
+        let send = AVAudioSourceNode(format: format, renderBlock: gatedRender(gate, meter: false) { n, l, r in
             dsp.copySend(frames: n, left: l, right: r)
         })
         [dry, send, reverb, eq].forEach { engine.attach($0) }

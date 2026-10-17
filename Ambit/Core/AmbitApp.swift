@@ -77,6 +77,7 @@ struct AmbitHome: View {
     @EnvironmentObject private var ensemble: Ensemble
     let onOpen: (Layer) -> Void
     @State private var showSettings = false
+    @State private var showAbout = false
 
     var body: some View {
         ZStack {
@@ -110,7 +111,10 @@ struct AmbitHome: View {
             }
         }
         .sheet(isPresented: $showSettings) {
-            AmbitSettings().presentationDetents([.medium])
+            AmbitSettings().presentationDetents([.medium, .large])
+        }
+        .sheet(isPresented: $showAbout) {
+            AboutAmbit().presentationDetents([.large])
         }
     }
 
@@ -121,6 +125,12 @@ struct AmbitHome: View {
                     .font(.system(size: 22, weight: .light, design: .monospaced))
                     .tracking(8)
                 ConductorLine(sky: ensemble.sky, field: ensemble.field)
+                Button { showAbout = true } label: {
+                    Label("What is this?", systemImage: "questionmark.circle")
+                        .font(.caption2)
+                }
+                .tint(Color(red: 0.75, green: 0.72, blue: 1.0))
+                .padding(.top, 1)
             }
             Spacer()
             AmbitAirPlayButton().frame(width: 30, height: 30)
@@ -482,7 +492,23 @@ private struct AmbitSettings: View {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { ensemble.puck = .zero }
                     }
                 } footer: {
-                    Text("Drag the puck toward an instrument to favour it: it swells, the one opposite fades away and the two beside it hold. Double-tap the pad to centre it. Each instrument's level and switch are under the pad; tap an instrument to open it.")
+                    Text("In the middle all four play equally. Drag the puck toward one to favour it; all the way to the rim and only that one plays. Along the rim between two, it crossfades between just those two. Loudness stays even across the pad. Double-tap the pad to centre it. Each instrument's level and switch are under the pad; tap an instrument to open it.")
+                }
+                Section {
+                    ForEach(Layer.allCases) { l in
+                        HStack {
+                            Circle().fill(l.color).frame(width: 7, height: 7)
+                            Text(l.name)
+                            Spacer()
+                            Text(loadText(l))
+                                .monospacedDigit()
+                                .foregroundStyle(ensemble.loads[l.rawValue] > 0.35 ? Color.orange : Color.secondary)
+                        }
+                    }
+                } header: {
+                    Text("Audio load")
+                } footer: {
+                    Text("How much of each audio buffer's time each instrument's synth takes to render (effects not included). All four share one real-time audio thread; together they should stay well under 100%. Instruments that are off, or pushed to zero on the pad, cost nothing.")
                 }
                 Section {
                     LabeledContent("Key", value: "Bellweathered (the sky)")
@@ -499,6 +525,16 @@ private struct AmbitSettings: View {
                 ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
             }
         }
+        .onAppear { ensemble.refreshLoads() }
+        .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { _ in
+            ensemble.refreshLoads()
+        }
+    }
+
+    private func loadText(_ l: Layer) -> String {
+        guard ensemble.isPlaying(l) else { return "off" }
+        if ensemble.gains[l.rawValue] == 0 { return "parked" }
+        return String(format: "%.0f%%", ensemble.loads[l.rawValue] * 100)
     }
 }
 

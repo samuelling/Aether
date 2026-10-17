@@ -33,7 +33,9 @@ final class DroneEngine {
         haloVerb.loadFactoryPreset(.largeHall2)
         haloVerb.wetDryMix = 100
         haloBus.outputVolume = 0.25
-        host.register(.aether) { [weak self] engine, format, out in self?.build(engine, format, out) }
+        host.register(.aether, gate: gate, effects: [delay, reverb, octave, haloVerb]) { [weak self] engine, format, out in
+            self?.build(engine, format, out)
+        }
     }
 
     /// 0…1 — how bright the octave-up halo is.

@@ -38,7 +38,9 @@ final class MotifEngine {
                 self.dsp?.install(s)
             }
         }
-        host.register(.motif) { [weak self] engine, format, out in self?.build(engine, format, out) }
+        host.register(.motif, gate: gate, effects: [delay, reverb]) { [weak self] engine, format, out in
+            self?.build(engine, format, out)
+        }
     }
 
     /// Echo on a dotted eighth of the tempo; the busier the phone, the wetter the room.

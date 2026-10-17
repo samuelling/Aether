@@ -80,8 +80,9 @@ extension Layer {
 /// Bellweathered's sky leads the key and Aether's radio room leads time for everyone.
 ///
 /// The mix: each instrument has a trim, and the pad's puck biases the four against each
-/// other. Push it toward one and that one swells, the one opposite fades away and the two
-/// beside hold, smoothly everywhere in between.
+/// other. In the middle all four are equal; pushed all the way toward one, only that one
+/// plays; along the rim between two neighbours, it crossfades between just those two.
+/// The total loudness stays the same everywhere on the pad (an equal-power law).
 @MainActor
 final class Ensemble: ObservableObject {
     let audio: AmbitAudio
@@ -97,6 +98,9 @@ final class Ensemble: ObservableObject {
     /// The pad's puck, inside the unit disc, y down. (0, 0) is an even mix.
     @Published var puck: CGPoint { didSet { applyGains(); savePuck() } }
     @Published var keepAwake: Bool { didSet { save(); updateIdle() } }
+    /// Each instrument's synth render time as a share of the real-time budget, refreshed
+    /// once a second while Settings is open.
+    @Published private(set) var loads: [Double] = Layer.allCases.map { _ in 0 }
 
     /// Which instruments Play all brings in: the ones that were on when last switched.
     private var chosen: Set<Layer>
@@ -117,7 +121,7 @@ final class Ensemble: ObservableObject {
         if let t = d.array(forKey: "ambit.trims") as? [Double], t.count == Layer.allCases.count {
             trims = t.map { max(0, min(1, $0)) }
         } else {
-            trims = [0.75, 0.7, 0.85, 0.75]
+            trims = [0.85, 0.8, 0.9, 0.85]
         }
         puck = CGPoint(x: d.double(forKey: "ambit.puck.x"), y: d.double(forKey: "ambit.puck.y"))
         keepAwake = d.object(forKey: "ambit.keepAwake") as? Bool ?? false
@@ -170,17 +174,32 @@ final class Ensemble: ObservableObject {
     /// The pad's bias for each instrument: 1 + (puck · its direction), so pushed all the way
     /// to one it's 2, the two beside it 1 and the one opposite 0. Partly normalized (by the
     /// square root of the largest), so the favourite swells about 3 dB as the others fall.
+    /// The pad's bias for each instrument, 0…1. Think of it as a spotlight: in the middle it
+    /// floods all four evenly (each at half amplitude, a quarter of the power); pushed out,
+    /// it narrows onto the instruments within 90° of where it points, by cos² of the angle
+    /// (so between two neighbours it splits the light), and at the rim the others are dark.
+    /// The power always sums to one. The last few percent of travel count as all the way, so
+    /// the rim is easy to reach with a thumb.
     var biases: [Double] {
-        let raw = Layer.allCases.map { l in
-            max(0, 1 + Double(puck.x * l.direction.dx + puck.y * l.direction.dy))
+        let x = Double(puck.x), y = Double(puck.y)
+        let d = sqrt(x * x + y * y)
+        let r = min(1, d / 0.94)
+        return Layer.allCases.map { l in
+            let along = d > 1e-6 ? (x * Double(l.direction.dx) + y * Double(l.direction.dy)) / d : 0
+            let toward = max(0, along)
+            return sqrt((1 - r) * 0.25 + r * toward * toward)
         }
-        let norm = sqrt(max(1, raw.max() ?? 1))
-        return raw.map { $0 / norm }
     }
 
-    /// What each instrument's bus is actually set to.
+    /// What each instrument's bus is actually set to. Exactly zero parks the instrument.
     var gains: [Double] {
-        zip(trims, biases).map { min(1, $0 * $1) }
+        zip(trims, biases).map { t, b in b < 1e-4 ? 0 : min(1, t * b) }
+    }
+
+    /// Read the audio thread's load meters (Settings polls this while it's open).
+    func refreshLoads() {
+        let l = audio.loads
+        if l != loads { loads = l }
     }
 
     private func applyGains() {
