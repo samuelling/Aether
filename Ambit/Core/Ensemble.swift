@@ -174,21 +174,26 @@ final class Ensemble: ObservableObject {
     /// The pad's bias for each instrument: 1 + (puck · its direction), so pushed all the way
     /// to one it's 2, the two beside it 1 and the one opposite 0. Partly normalized (by the
     /// square root of the largest), so the favourite swells about 3 dB as the others fall.
-    /// The pad's bias for each instrument, 0…1. Think of it as a spotlight: in the middle it
-    /// floods all four evenly (each at half amplitude, a quarter of the power); pushed out,
-    /// it narrows onto the instruments within 90° of where it points, by cos² of the angle
-    /// (so between two neighbours it splits the light), and at the rim the others are dark.
-    /// The power always sums to one. The last few percent of travel count as all the way, so
-    /// the rim is easy to reach with a thumb.
+    /// The pad's bias for each instrument, 0…1.
+    ///
+    /// In the middle all four sit at half amplitude (a quarter of the power each). As the puck
+    /// moves out, everyone's share of that even mix fades as (1 − r)², which is close to a
+    /// steady number of decibels per step of travel: about −2.5 dB a quarter of the way out,
+    /// −12 dB halfway, −24 dB at three quarters, and silence only at the rim. What it gives
+    /// up goes to the instruments the puck points at, split by cos of the angle, so between
+    /// two neighbours it crossfades between them. The four are then normalised to constant
+    /// total power, so the overall loudness never changes as you move.
     var biases: [Double] {
         let x = Double(puck.x), y = Double(puck.y)
-        let d = sqrt(x * x + y * y)
-        let r = min(1, d / 0.94)
-        return Layer.allCases.map { l in
-            let along = d > 1e-6 ? (x * Double(l.direction.dx) + y * Double(l.direction.dy)) / d : 0
-            let toward = max(0, along)
-            return sqrt((1 - r) * 0.25 + r * toward * toward)
+        let r = min(1, sqrt(x * x + y * y))
+        let even = (1 - r) * (1 - r)
+        let raw = Layer.allCases.map { l -> Double in
+            let along = r > 1e-6 ? (x * Double(l.direction.dx) + y * Double(l.direction.dy)) / r : 0
+            return 0.5 * even + max(0, along) * (1 - even)
         }
+        let power = raw.reduce(0) { $0 + $1 * $1 }
+        guard power > 1e-9 else { return raw }
+        return raw.map { $0 / sqrt(power) }
     }
 
     /// What each instrument's bus is actually set to. Exactly zero parks the instrument.

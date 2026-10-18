@@ -106,4 +106,7 @@ Bellweathered's Settings has a "Simulated" weather switch to hear different cond
 - **EU trader status.** If you declare yourself a *trader*, your address, phone and email are shown on the EU App Store. A hobbyist publishing free apps with no business behind them would typically choose *non-trader*, but it's your call.
 - **Copyright line** (the name as it should appear).
 - **Release**: automatic or manual after approval.
-- **Aether Wave and Bellweathered.** Ambit contains both. Submitting all three risks a rejection under guideline 4.3 (similar apps from one developer). Options: publish only Ambit; or publish all three and explain in the review notes that the single apps are for playing across two phones.
+
+## Aether Wave and Bellweathered
+
+Ambit is the app being published. The two older App Store Connect records (Aether Wave, Bellweathered) stay in "Prepare for Submission" and are never submitted, so there's no overlap for App Review to flag. They can be left as they are; an unsubmitted record isn't visible to anyone.
