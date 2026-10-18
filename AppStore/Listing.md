@@ -12,8 +12,8 @@ Copy each field into App Store Connect › your app (App Store tab, App Informat
 | Keywords | `ambient,generative,drone,eno,bluetooth,synth,pad,meditation,sleep,focus,instrument,radio,soundscape` | 99/100 |
 | Category | Music (secondary: Entertainment) | |
 | Price | Free | |
-| Privacy Policy URL | https://samuelling.github.io/Aether/aether/privacy.html | |
-| Support URL | https://samuelling.github.io/Aether/#support | |
+| Privacy Policy URL | https://samuelling.github.io/Aether/docs/aether/privacy.html | |
+| Support URL | https://samuelling.github.io/Aether/docs/#support | |
 
 **Promotional text** (162/170)
 
@@ -74,8 +74,8 @@ The optional "Duo" feature pairs with our companion app Bellweathered on a secon
 | Keywords | `ambient,weather,generative,drone,bells,sleep,focus,meditation,rain,wind,soundscape,eno,synth` | 92/100 |
 | Category | Music (secondary: Entertainment) | |
 | Price | Free | |
-| Privacy Policy URL | https://samuelling.github.io/Aether/bellweather/privacy.html | |
-| Support URL | https://samuelling.github.io/Aether/#support | |
+| Privacy Policy URL | https://samuelling.github.io/Aether/docs/bellweather/privacy.html | |
+| Support URL | https://samuelling.github.io/Aether/docs/#support | |
 
 **Promotional text** (138/170)
 
@@ -148,4 +148,4 @@ Both apps are iPhone-only, so one set per app: **6.9" iPhone, 1320 × 2868 px po
 - Version is 1.0, Build 2 (Build 1 was the first upload; Build 2 adds the Leitmotif listener sync and drops Aether's piano arpeggio). Every later upload needs a higher Build number. Once 1.0 is live, the next release also needs a new Version (e.g. 1.1).
 - Export compliance is pre-answered (no non-exempt encryption).
 - EU: App Store Connect asks for your Digital Services Act trader status. Whether you count as a trader is your call; a hobbyist publishing free apps with no business behind them would typically choose non-trader.
-- Turn on GitHub Pages for this repo (Settings › Pages › Deploy from branch › main › /docs) so the privacy and support URLs above go live.
+- GitHub Pages serves this repo from its root, so the site's pages live under `/Aether/docs/` (the URLs above include it). Don't switch Pages to `/docs`: that would break these links and Ambit's TestFlight privacy link.
