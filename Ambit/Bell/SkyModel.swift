@@ -234,22 +234,29 @@ final class SkyModel: NSObject, ObservableObject {
         let throbEnv = ta < 0 ? 0 : (ta < 20 ? smoothstep(ta / 20) : max(0, 1 - (ta - 20) / 35))
         let throb = throbEnv * min(1, moon) * 0.25
 
-        // Drone colour
-        p[.cutoff] = Float(min(7000, max(100, 1400 * lin(w.temp, -10, 105, 0.7, 1.35)
-                                   * lin(w.cloud, 0, 100, 1.15, 0.72) * (0.85 + 0.3 * day))))
-        p[.q] = Float(0.5 + lin(w.humidity, 0, 100, 0.03, 0.12) * 9)
-        p[.flfoRate] = Float(lin(w.wind, 0, 50, 0.006, 0.05) * 0.6)
-        p[.flfoDepth] = 400
-        p[.swellMult] = Float(lin(w.wind, 0, 50, 0.6, 1.7))
-        p[.spread] = Float(lin(w.pressure, 980, 1040, 1.7, 0.5))
-        p[.timbreA] = 0.25
-        p[.timbreB] = 0.35
-        p[.lvl0] = Float((0.16 + (1 - day) * 0.12) * (1 + throb))
-        p[.lvl1] = Float((0.30 + (1 - day) * 0.12) * (1 + throb))
-        p[.lvl2] = 0.42
-        p[.lvl3] = Float(0.10 + day * 0.30)
-        p[.lvl4] = Float(0.03 + day * day * 0.20)
-        p[.lvl5] = Float(0.05 + day * 0.08)
+        // Drone: pure sines on a deep root, the weather setting its balance and motion.
+        //  • pressure → weight: falling pressure (weather coming in) brings up the sub-octave
+        //  • warmth and daylight → the octave and twelfth come forward; cold nights are bare
+        //  • wind → the root's twin beats faster against it, and the whole drone breathes
+        //    deeper and quicker (gusts lift it too)
+        //  • cloud and humidity → a lower lowpass, so overcast days are rounder
+        //  • the moon's throb still swells the low end now and then
+        let warm = min(1, max(0, lin(w.temp, 20, 90, 0, 1)))
+        let heavy = min(1, max(0, lin(w.pressure, 1035, 985, 0, 1)))
+        let windF = min(1, max(0, w.wind / 40))
+        p[.lvl0] = Float((0.30 + 0.40 * heavy + 0.10 * (1 - day)) * (1 + throb))     // sub
+        p[.lvl1] = Float(0.36 * (1 + throb))                                        // root
+        p[.lvl2] = Float(0.36 * (1 + throb))                                        // root's twin
+        p[.lvl3] = Float(0.06 + 0.14 * day + 0.08 * warm)                           // octave
+        p[.lvl4] = Float(0.015 + 0.05 * warm * (0.3 + 0.7 * day))                   // twelfth
+        p[.lvl5] = 0
+        p[.timbreB] = Float(0.04 + 0.40 * windF)          // beat between the root and its twin, Hz
+        p[.flfoRate] = Float(0.025 + 0.10 * windF)        // breath rate, Hz
+        p[.flfoDepth] = 0
+        p[.swellMult] = Float(0.06 + 0.30 * windF)        // breath depth
+        p[.cutoff] = Float(min(1400, max(160, 260 + 700 * (1 - w.cloud / 100) * (0.75 + 0.25 * day)
+                                              - 120 * w.humidity / 100)))
+        p[.q] = 0.6
 
         // Air
         let wf = w.wind / 50

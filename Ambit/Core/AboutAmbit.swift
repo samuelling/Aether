@@ -22,7 +22,7 @@ struct AboutAmbit: View {
 
                     entry(.bell, place: "Below · the land and weather",
                           source: "Live weather where you are from Open-Meteo (temperature, cloud, humidity, wind, pressure, rain or snow), refreshed every ten minutes, plus the sun's and moon's positions and the moon's phase, worked out on the phone. With no connection it plays a simulated sky.",
-                          mapping: "A six-layer drone coloured by the weather: warmth and daylight brighten it, cloud and humidity soften it, wind makes it breathe and gust. Rain or snow adds hiss; slow Airports-style melody loops get busier in rain and softer in snow; a bell rings on the solar hour. Bellweathered leads the harmony: its key and scale are everyone's.")
+                          mapping: "A deep, pure bass drone made only of sine waves, shaped by the weather: falling pressure brings up the sub-octave, warmth and daylight bring in the octave above, cloud and humidity round it off, and wind makes it beat and breathe (gusts lift it). Wind itself whistles through; rain or snow adds hiss; slow Airports-style melody loops get busier in rain and softer in snow; a bell rings on the solar hour. Bellweathered leads the harmony: its key and scale are everyone's.")
 
                     entry(.aether, place: "Left · the radio room",
                           source: "The Bluetooth signals around you: every phone, watch, earbud, TV or gadget nearby that advertises itself, and how strongly it's heard (its signal strength), several times a second. Only the strength and a scrambled identity are used, never what the device is saying.",

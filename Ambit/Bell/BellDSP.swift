@@ -64,10 +64,10 @@ final class BellParams {
     }
 }
 
-/// Bellweathered's sound, rendered natively:
-///  • a six-layer "blend" drone (sine morphing toward a slowly beating saw) at sub-octaves,
-///    root, octaves and a 2.76× bell partial, each with its own swell and pan drift,
-///    through a resonant lowpass with a slow filter LFO;
+/// Bellweathered's sound in Ambit, rendered natively:
+///  • a pure deep drone: sine waves only, on the sub-octave, the root (twice, one a hair
+///    sharp so the pair beats slowly, spread left and right), the octave and the twelfth,
+///    breathing with the wind, through a gentle (non-resonant) lowpass;
 ///  • wind (pink noise in a wandering band, gusts with a whistle and a short echo);
 ///  • rain hiss or snow hush;
 ///  • the hourly bell (six inharmonic partials);
@@ -81,11 +81,12 @@ final class BellDSP {
     private static let tableSize = 4096
     private let sine: UnsafeMutablePointer<Float>
 
-    // Drone
-    private let ratios: [Float] = [0.25, 0.5, 1, 2, 4, 2.76]
+    // Drone: sub, root, root's beating twin, octave, twelfth (the sixth slot is unused)
+    private let ratios: [Float] = [0.5, 1, 1, 2, 3, 0]
     private let swellRate: [Float] = [0.009, 0.013, 0.017, 0.021, 0.026, 0.031]
-    private let swellDepth: [Float] = [0.10, 0.10, 0.075, 0.125, 0.15, 0.10]
-    private let basePan: [Float] = [0, 0, 0, -0.45, 0.5, 0.3]
+    private let swellDepth: [Float] = [0.04, 0.05, 0.05, 0.08, 0.10, 0]
+    private let basePan: [Float] = [0, -0.35, 0.35, 0, 0, 0]
+    private var droneAmp: Float = 1
     private let sinPh: UnsafeMutablePointer<Float>
     private let sawPh: UnsafeMutablePointer<Float>
     private let swPh: UnsafeMutablePointer<Float>
@@ -319,55 +320,54 @@ final class BellDSP {
             }
         }
 
-        // ---------- drone ----------
+        // ---------- drone: pure sines on a deep root ----------
+        // Breath: a slow swell set by the wind (rate and depth), plus a lift on every gust,
+        // applied as a gain ramp across the block so it never zippers.
         flfoPh = wrap(flfoPh + p[.flfoRate] * bt)
-        let fc = max(20, cut + p[.flfoDepth] * sn(flfoPh))
-        let (a1, a2, a3) = svf(fc, 1 / max(0.5, q))
-        let sineG = 1 - 0.9 * tA, sawG = 0.9 * tA
-        let beat = min(max(tB * spread, 0), 1.6) * 0.3 + 0.02
-        let swellMult = p[.swellMult]
+        let depth = min(0.5, max(0, p[.swellMult]))
+        let amp0 = droneAmp
+        droneAmp = (1 - depth * (0.5 - 0.5 * sn(flfoPh))) * (1 + 0.3 * max(0, p[.windGust]))
+        let ampInc = (droneAmp - amp0) / Float(n)
+        let beatHz = max(0, tB)
+        let (a1, a2, a3) = svf(max(60, cut), 1 / max(0.5, q))
 
-        for li in 0..<BellParams.layers {
-            let f = hz * ratios[li]
-            guard f < sr * 0.45 else { continue }
-            swPh[li] = wrap(swPh[li] + swellRate[li] * swellMult * bt)
+        for li in 0..<5 {
+            var f = hz * ratios[li]
+            if li == 2 { f += beatHz }          // the twin: beats against the root
+            guard f > 15, f < sr * 0.45 else { continue }
+            swPh[li] = wrap(swPh[li] + swellRate[li] * bt)
             panPh[li] = wrap(panPh[li] + panRate[li] * bt)
-            let swell = 0.9 + swellDepth[li] * sn(swPh[li])
-            let panAmt: Float = basePan[li] == 0 ? 0.12 : 0.18
-            let pan = max(-1, min(1, basePan[li] + panAmt * sn(panPh[li])))
+            let swell = 1 + swellDepth[li] * sn(swPh[li])
+            let pan = basePan[li] == 0 ? 0 : max(-1, min(1, basePan[li] + 0.12 * sn(panPh[li])))
             let ang = (pan + 1) * Float.pi / 4
-            let g = lvl[li] * swell * 1.25
+            let g = lvl[li] * swell
             let gl = g * cosf(ang), gr = g * sinf(ang)
-            let incS = f / sr
-            let isBell = li == 5
-            let incW = (f + beat) / sr
-            var ps = sinPh[li], pw = sawPh[li]
+            let inc = f / sr
+            var ph = sinPh[li]
             for i in 0..<n {
-                var x = sn(ps)
-                ps += incS; if ps >= 1 { ps -= 1 }
-                if !isBell {
-                    let saw = 2 * pw - 1 - polyBlep(pw, incW)
-                    pw += incW; if pw >= 1 { pw -= 1 }
-                    x = x * sineG + saw * sawG
-                }
+                let x = sn(ph)
+                ph += inc; if ph >= 1 { ph -= 1 }
                 L[i] += x * gl
                 R[i] += x * gr
             }
-            sinPh[li] = ps; sawPh[li] = pw
+            sinPh[li] = ph
         }
-        // Resonant lowpass on the drone bus, then its level
+        // Gentle lowpass on the drone bus (cloud and humidity darken it), breath, level
         var l1 = fL1, l2 = fL2, r1 = fR1, r2 = fR2
+        var amp = amp0
         for i in 0..<n {
+            amp += ampInc
+            let out = droneOut * amp
             var v3 = L[i] - l2
             var v1 = a1 * l1 + a2 * v3
             var v2 = l2 + a2 * l1 + a3 * v3
             l1 = 2 * v1 - l1; l2 = 2 * v2 - l2
-            L[i] = v2 * droneOut
+            L[i] = v2 * out
             v3 = R[i] - r2
             v1 = a1 * r1 + a2 * v3
             v2 = r2 + a2 * r1 + a3 * v3
             r1 = 2 * v1 - r1; r2 = 2 * v2 - r2
-            R[i] = v2 * droneOut
+            R[i] = v2 * out
         }
         fL1 = abs(l1) < 1e-15 ? 0 : l1; fL2 = abs(l2) < 1e-15 ? 0 : l2
         fR1 = abs(r1) < 1e-15 ? 0 : r1; fR2 = abs(r2) < 1e-15 ? 0 : r2
