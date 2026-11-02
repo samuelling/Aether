@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import CoreMotion
 
 let pitchNames = ["C", "C♯", "D", "E♭", "E", "F", "F♯", "G", "A♭", "A", "B♭", "B"]
 
@@ -73,6 +74,101 @@ extension Layer {
     }
 }
 
+/// Tilt the phone to move the mix pad's puck, as if the pad were a tray with a marble on it.
+///
+/// Whatever angle the phone is held at when tilt is switched on (or "Set neutral" is pressed)
+/// is the middle of the pad; tilting from there pushes the puck, a 30 degree lean reaching the
+/// rim. The axes come from gravity alone, measured against that neutral pose, so it works the
+/// same held upright, propped at an angle or lying flat, and turning the phone about the
+/// vertical does nothing. Gravity-only device motion needs no permission.
+@MainActor
+final class TiltMixer {
+    private let motion = CMMotionManager()
+    private var neutral: (x: Double, y: Double, z: Double)?
+    private var smoothed = CGPoint.zero
+    private var last = CGPoint(x: CGFloat.infinity, y: CGFloat.infinity)   // forces the first reading out
+    private(set) var running = false
+    var onPuck: ((CGPoint) -> Void)?
+
+    var isAvailable: Bool { motion.isDeviceMotionAvailable }
+
+    /// A tilt this large (the sine of 30 degrees) reaches the rim of the pad.
+    private let fullScale = 0.5
+    /// Ignore the first couple of degrees, so a phone resting in the hand doesn't wander.
+    private let deadZone = 0.06
+
+    func start() {
+        guard !running, motion.isDeviceMotionAvailable else { return }
+        running = true
+        neutral = nil
+        smoothed = .zero
+        last = CGPoint(x: CGFloat.infinity, y: CGFloat.infinity)
+        motion.deviceMotionUpdateInterval = 1.0 / 30.0
+        motion.startDeviceMotionUpdates(to: .main) { [weak self] m, _ in
+            guard let g = m?.gravity else { return }
+            MainActor.assumeIsolated { self?.handle(g.x, g.y, g.z) }
+        }
+    }
+
+    func stop() {
+        guard running else { return }
+        running = false
+        motion.stopDeviceMotionUpdates()
+    }
+
+    /// Take the way the phone is held right now as the middle of the pad.
+    func setNeutral() {
+        neutral = nil
+        smoothed = .zero
+        last = CGPoint(x: CGFloat.infinity, y: CGFloat.infinity)
+    }
+
+    private func handle(_ gx: Double, _ gy: Double, _ gz: Double) {
+        let len = (gx * gx + gy * gy + gz * gz).squareRoot()
+        guard len > 0.5 else { return }
+        let g = (x: gx / len, y: gy / len, z: gz / len)
+        if neutral == nil { neutral = g }
+        guard let n = neutral else { return }
+
+        // Two axes at right angles to the neutral gravity direction: u is the phone's own
+        // left-right axis flattened against it (its short axis, if the phone is neutral on its
+        // side), and w = n x u is the third, which is the phone's front-to-back lean.
+        var ax = (x: 1.0, y: 0.0, z: 0.0)
+        var d = n.x
+        if abs(d) > 0.9 { ax = (x: 0.0, y: 1.0, z: 0.0); d = n.y }
+        var u = (x: ax.x - d * n.x, y: ax.y - d * n.y, z: ax.z - d * n.z)
+        let ul = (u.x * u.x + u.y * u.y + u.z * u.z).squareRoot()
+        guard ul > 1e-6 else { return }
+        u = (x: u.x / ul, y: u.y / ul, z: u.z / ul)
+        let w = (x: n.y * u.z - n.z * u.y, y: n.z * u.x - n.x * u.z, z: n.x * u.y - n.y * u.x)
+
+        // Gravity's lean along each axis: the right edge dropping pushes the puck right (toward
+        // Leitmotif); the top edge tipping away pushes it up (toward Orbitakt).
+        let rawX = (g.x * u.x + g.y * u.y + g.z * u.z) / fullScale
+        let rawY = (g.x * w.x + g.y * w.y + g.z * w.z) / fullScale
+
+        // Dead zone, then a light smoothing so it glides rather than jitters.
+        var p = CGPoint(x: rawX, y: rawY)
+        let r = (p.x * p.x + p.y * p.y).squareRoot()
+        if r < deadZone {
+            p = .zero
+        } else {
+            let k = (r - deadZone) / (1 - deadZone) / r
+            p = CGPoint(x: p.x * k, y: p.y * k)
+        }
+        let a = 0.25
+        smoothed = CGPoint(x: smoothed.x + (p.x - smoothed.x) * a, y: smoothed.y + (p.y - smoothed.y) * a)
+        var q = smoothed
+        let qr = (q.x * q.x + q.y * q.y).squareRoot()
+        if qr > 1 { q = CGPoint(x: q.x / qr, y: q.y / qr) }
+
+        if abs(q.x - last.x) > 0.003 || abs(q.y - last.y) > 0.003 {
+            last = q
+            onPuck?(q)
+        }
+    }
+}
+
 /// The four instruments in one process, one audio engine and one mix.
 ///
 /// The models are the apps' own, unchanged in what they hear and how they play; they talk
@@ -98,6 +194,8 @@ final class Ensemble: ObservableObject {
     /// The pad's puck, inside the unit disc, y down. (0, 0) is an even mix.
     @Published var puck: CGPoint { didSet { applyGains(); savePuck() } }
     @Published var keepAwake: Bool { didSet { save(); updateIdle() } }
+    /// Tilt the phone to move the puck (off unless you switch it on).
+    @Published var tiltMix: Bool { didSet { save(); updateTilt() } }
     /// Each instrument's synth render time as a share of the real-time budget, refreshed
     /// once a second while Settings is open.
     @Published private(set) var loads: [Double] = Layer.allCases.map { _ in 0 }
@@ -106,6 +204,7 @@ final class Ensemble: ObservableObject {
     private var chosen: Set<Layer>
     private var bag: Set<AnyCancellable> = []
     private var lastPuckSave = Date.distantPast
+    private let tilt = TiltMixer()
 
     var anyPlaying: Bool { playing.contains(true) }
 
@@ -125,6 +224,7 @@ final class Ensemble: ObservableObject {
         }
         puck = CGPoint(x: d.double(forKey: "ambit.puck.x"), y: d.double(forKey: "ambit.puck.y"))
         keepAwake = d.object(forKey: "ambit.keepAwake") as? Bool ?? false
+        tiltMix = d.bool(forKey: "ambit.tilt")
         if let c = d.array(forKey: "ambit.chosen") as? [Int] {
             chosen = Set(c.compactMap(Layer.init(rawValue:)))
         } else {
@@ -140,6 +240,19 @@ final class Ensemble: ObservableObject {
             }
             .store(in: &bag)
         applyGains()
+        tilt.onPuck = { [weak self] p in self?.puck = p }
+        updateTilt()
+    }
+
+    /// Whether this phone has the motion sensors tilt needs (the Simulator doesn't).
+    var tiltAvailable: Bool { tilt.isAvailable }
+
+    /// Take the way the phone is held now as the middle of the pad.
+    func setTiltNeutral() { tilt.setNeutral() }
+
+    /// Tilt runs only while it's switched on and Ambit is in front.
+    private func updateTilt() {
+        if tiltMix && !inBackground { tilt.start() } else { tilt.stop() }
     }
 
     func isPlaying(_ l: Layer) -> Bool { playing[l.rawValue] }
@@ -225,6 +338,7 @@ final class Ensemble: ObservableObject {
             break
         }
         updateIdle()
+        updateTilt()
     }
 
     private func updateIdle() {
@@ -237,6 +351,7 @@ final class Ensemble: ObservableObject {
         let d = UserDefaults.standard
         d.set(trims, forKey: "ambit.trims")
         d.set(keepAwake, forKey: "ambit.keepAwake")
+        d.set(tiltMix, forKey: "ambit.tilt")
         d.set(chosen.map(\.rawValue), forKey: "ambit.chosen")
     }
 

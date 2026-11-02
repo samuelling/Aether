@@ -200,13 +200,18 @@ struct MixPad: View {
                     .fill(Color.white.opacity(0.001))
                     .frame(width: 2 * R + 30, height: 2 * R + 30)
                     .highPriorityGesture(DragGesture(minimumDistance: 0).onChanged { v in
+                        guard !ensemble.tiltMix else { return }      // the tilt is steering
                         var p = CGPoint(x: (v.location.x - (R + 15)) / R, y: (v.location.y - (R + 15)) / R)
                         let r = sqrt(p.x * p.x + p.y * p.y)
                         if r > 1 { p = CGPoint(x: p.x / r, y: p.y / r) }
                         ensemble.puck = p
                     })
                     .simultaneousGesture(TapGesture(count: 2).onEnded {
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { ensemble.puck = .zero }
+                        if ensemble.tiltMix {
+                            ensemble.setTiltNeutral()                // double-tap: the way it's held is the middle
+                        } else {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { ensemble.puck = .zero }
+                        }
                     })
                     .accessibilityElement()
                     .accessibilityLabel("Mix pad")
@@ -488,9 +493,21 @@ private struct AmbitSettings: View {
                     Text("Aether only hears the radio room while Ambit is in front, so keep the screen on for a live room. Leave it off to let Ambit play in your pocket: Leitmotif, Bellweathered and Orbitakt carry on live, and Aether holds the room it last heard.")
                 }
                 Section {
+                    Toggle("Tilt the phone to mix", isOn: $ensemble.tiltMix)
+                        .disabled(!ensemble.tiltAvailable)
+                    if ensemble.tiltMix {
+                        Button("Set neutral here") { ensemble.setTiltNeutral() }
+                    }
+                } footer: {
+                    Text(ensemble.tiltAvailable
+                         ? "Off by default. Hold the phone the way you like, switch it on, and tilt: the puck rolls toward the low side, like a marble on a tray. Lean the right edge down for Leitmotif, tip the top away for Orbitakt, and so on; about a 30° lean reaches the rim. The way you're holding it when you switch it on is the middle of the pad. Double-tap the pad, or press Set neutral, to take a new middle. While tilt is on, dragging the pad is off, and tilt pauses when Ambit is in the background."
+                         : "This device doesn't have the motion sensors tilt needs.")
+                }
+                Section {
                     Button("Centre the mix") {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { ensemble.puck = .zero }
                     }
+                    .disabled(ensemble.tiltMix)
                 } footer: {
                     Text("In the middle all four play equally. Drag the puck toward one to favour it; all the way to the rim and only that one plays. Along the rim between two, it crossfades between just those two. Loudness stays even across the pad. Double-tap the pad to centre it. Each instrument's level and switch are under the pad; tap an instrument to open it.")
                 }
