@@ -7,6 +7,7 @@ extension UtteranceKind {
         case .burst: return Color(red: 1.0, green: 0.72, blue: 0.36)
         case .bulk: return Color(red: 0.55, green: 0.66, blue: 0.95)
         case .chatter: return Color(red: 1.0, green: 0.36, blue: 0.62)
+        case .life: return Color(red: 0.45, green: 0.85, blue: 0.75)
         }
     }
 }
@@ -53,6 +54,12 @@ struct LeitmotifPanel: View {
                     .font(.caption2)
                     .foregroundStyle(model.partnerName != nil ? Color.cyan : Color.secondary)
                     .lineLimit(2)
+                if model.isPlaying && !model.lifeLine.isEmpty {
+                    Text(model.lifeLine)
+                        .font(.caption2)
+                        .foregroundStyle(UtteranceKind.life.color)
+                        .lineLimit(2)
+                }
             }
             Spacer()
             Button { showSettings = true } label: {
@@ -92,14 +99,14 @@ struct LeitmotifPanel: View {
 
     private var emptyText: String {
         model.isPlaying
-            ? "Waiting for a burst of traffic. Open another app."
-            : "Every burst of traffic will appear here as a three-letter word, and be sung."
+            ? "Waiting for the phone to do something: plug it in, walk, open another app."
+            : "Everything your phone does appears here and is sung: events by name, traffic as three-letter words."
     }
 
     private var ledger: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 12) {
-                ForEach([UtteranceKind.burst, .bulk, .chatter], id: \.self) { k in
+                ForEach([UtteranceKind.life, .burst, .bulk, .chatter], id: \.self) { k in
                     HStack(spacing: 4) {
                         Circle().fill(k.color).frame(width: 7, height: 7)
                         Text(k.label)
@@ -245,13 +252,22 @@ struct LeitmotifSettings: View {
                 .disabled(model.followingKey)
 
                 Section {
+                    Toggle("Power, headphones & connections", isOn: $model.lifeEvents)
+                    Toggle("Movement: footsteps & posture", isOn: $model.lifeMovement)
+                } header: {
+                    Text("Your phone's life")
+                } footer: {
+                    Text("Leitmotif listens to what your phone is doing, all on the phone, with no permission prompts and nothing recorded or sent. Events each have their own tune, and the opposite event is the same tune backwards: the charger going in and out, headphones, Wi-Fi or cellular, Low Power Mode, getting hot, the battery running down. Movement turns your footsteps into soft high notes while you walk or run, notices when you pick the phone up or put it down, and lets how it's held lean the sound left or right. Resting flat on a table hushes it, a low battery tires it, and a dim screen darkens it.")
+                }
+
+                Section {
                     Stepper("Octave \(model.octave >= 0 ? "+" : "")\(model.octave)", value: $model.octave, in: -2...1)
                     Toggle("Whisper the chatter", isOn: $model.whisperChatter)
                     Button("Clear the list", role: .destructive) { model.clearLedger() }
                 } header: {
                     Text("Voice")
                 } footer: {
-                    Text("Leitmotif reads only how much your phone sends and receives, and in what rhythm: no names, no content, no VPN. Each burst becomes a letter (↑ sent, ↓ received; small, Medium, Large), and each three-letter word becomes a motif, so a habit (streaming, messaging, scrolling) gets a tune by its footsteps.")
+                    Text("The network part reads only how much your phone sends and receives, and in what rhythm: no names, no content, no VPN. Each burst becomes a letter (↑ sent, ↓ received; small, Medium, Large), and each three-letter word becomes a motif, so a habit (streaming, messaging, scrolling) gets a tune by its footsteps.")
                 }
 
                 Section {

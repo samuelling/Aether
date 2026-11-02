@@ -5,12 +5,14 @@ enum UtteranceKind: String {
     case burst      // ordinary traffic: sung by the soloist in the middle register
     case bulk       // large downloads of full-size packets (streams, files): low and soft
     case chatter    // small bursts of tiny packets (pings, keep-alives, chat): whispered
+    case life       // something happened to the phone (charger, headphones, a walk…): its own motif
 
     var label: String {
         switch self {
         case .burst: return "bursts"
         case .bulk: return "bulk (streams, downloads)"
         case .chatter: return "chatter"
+        case .life: return "phone life"
         }
     }
 }
@@ -31,6 +33,8 @@ struct Utterance: Identifiable {
     let motif: [MotifNote]
     let pan: Float
     let detail: String          // "412 KB received · 1.3 s · 1380 B/packet"
+    var register = 0            // octave offset it's sung in (−1 low … 0 middle)
+    var gain = 1.0              // how firmly it's played
     var fate: Fate = .waiting
 
     enum Fate { case waiting, sung, whispered, merged, dropped }
